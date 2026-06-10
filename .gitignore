@@ -1,1 +1,21 @@
-.idea
+# data (too large for git; reproduced via download script)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# results are regenerated; keep a few final figures by hand if you want them in slides
+results/figures/*
+results/tables/*
+!results/figures/.gitkeep
+!results/tables/.gitkeep
+
+# python / jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+env/
+
+# celltypist model cache
+*.pkl
