@@ -19,3 +19,6 @@ env/
 
 # celltypist model cache
 *.pkl
+
+# old notebook-based pipeline, kept locally as reference only (not a repo deliverable)
+legacy/
