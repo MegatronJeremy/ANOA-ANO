@@ -1,0 +1,35 @@
+# Environment for the single-cell nanoplastic immune-response pipeline.
+# Windows box with no conda available -- verified working via a plain venv:
+#
+#   python -m venv .venv
+#   .venv\Scripts\activate
+#   pip install -r requirements.txt
+
+# --- core single-cell stack ---
+scanpy==1.11.5
+anndata==0.12.16
+leidenalg==0.12.0
+igraph==1.0.0          # pip distribution is "igraph", not "python-igraph"
+# harmonypy is pinned to the last pure-Python release. 2.0.0 rewrote the core
+# in C++ and ships only an sdist on PyPI for Windows, which needs CMake +
+# Armadillo + a BLAS implementation to build -- none of which are present on
+# this box, and pulling them in is unnecessary for the pure-Python results
+# we need. Verified: harmonypy==0.0.10 installs from a wheel, no build step.
+harmonypy==0.0.10
+
+# --- numeric / dataframes / plotting ---
+numpy==2.4.6
+scipy==1.17.1
+pandas==2.3.3
+matplotlib==3.11.0
+seaborn==0.13.2
+
+# --- annotation / DE / pathway enrichment ---
+celltypist==1.7.1     # automated PBMC cell-type annotation (Stage 3, Azimuth alternative)
+gseapy==1.2.1          # pathway enrichment GO/KEGG/Reactome (Stage 5)
+scikit-misc==0.5.2     # needed for the seurat_v3 HVG flavour (Stage 1)
+
+# --- output formatting (presentation layer only, no analysis dependency) ---
+rich==15.0.0         # promoted from transitive to direct: drives all --debug panels/tables/progress bars
+plotext==5.3.2        # character-based terminal plots for --debug QC verification (no sixel/kitty needed)
+questionary==2.1.1    # arrow-key stage-selection menu when run_pipeline.py is launched with no args
