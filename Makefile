@@ -19,8 +19,20 @@ qc:
 integration:
 	$(PY) run_pipeline.py --stage integration $(FLAGS)
 
+annotation:
+	$(PY) run_pipeline.py --stage annotation $(FLAGS)
+
+composition:
+	$(PY) run_pipeline.py --stage composition $(FLAGS)
+
+de:
+	$(PY) run_pipeline.py --stage de $(FLAGS)
+
+size:
+	$(PY) run_pipeline.py --stage size $(FLAGS)
+
 # Run every registered stage in order. Keep in sync with STAGE_REGISTRY.
-all: qc integration
+all: qc integration annotation composition de size
 
 test:
 	$(PY) -m pytest

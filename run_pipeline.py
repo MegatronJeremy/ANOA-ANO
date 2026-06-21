@@ -41,6 +41,7 @@ from src import integration
 from src import annotation
 from src import composition
 from src import differential_expression
+from src import size_effects
 from src.logging_utils import setup_logging, log_stage_banner, progress_spinner, get_console, get_logger
 
 
@@ -133,6 +134,14 @@ def run_de_stage(args, log):
     return adata
 
 
+def run_size_stage(args, log):
+    is_smoke = bool(args.smoke_test or args.subsample)
+    with log_stage_banner("Stage 6: Size-specific effects"):
+        # Reads Stage 5's DE CSVs (not an AnnData checkpoint), writes tables + UpSet figures.
+        size_effects.run(debug=args.debug, smoke=is_smoke)
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Stage registry -- the single source of truth for both the --stage CLI
 # argument and the interactive menu. Adding a future stage (2-6) is a
@@ -198,7 +207,16 @@ STAGE_REGISTRY = {
         produces_checkpoint=False,
         table_outputs=("results/tables/05_DE_recurrent_genes.csv",),
     ),
-    # Stage 6 registers here.
+    "size": StageSpec(
+        key="size",
+        label="Stage 6: Size-specific effects",
+        description="unique 40nm / unique 200nm / shared / mixture-emergent genes per lineage",
+        input_checkpoint="03_annotated",   # proxy gate; the real inputs are Stage 5's DE CSVs
+        output_checkpoint="06_size_effects",  # label only; table stage
+        run_fn=run_size_stage,
+        produces_checkpoint=False,
+        table_outputs=("results/tables/06_size_specific_summary.csv",),
+    ),
 }
 
 

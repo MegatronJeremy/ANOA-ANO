@@ -26,7 +26,7 @@ if (-not (Test-Path $py)) {
 
 # Ordered list of registered stages. Keep in sync with STAGE_REGISTRY as
 # stages 3-6 are added (qc, integration, annotation, composition, de, size).
-$Stages = @("qc", "integration")
+$Stages = @("qc", "integration", "annotation", "composition", "de", "size")
 
 $flags = @()
 if ($Smoke) { $flags += "--smoke-test" }
