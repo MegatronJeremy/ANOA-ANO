@@ -24,10 +24,19 @@ mixture do something neither size does alone?
 No conda on the dev machine — built and verified with a plain venv. `requirements.txt` is the
 environment file.
 
+**Windows (recommended) — one-shot setup script:**
+
+```powershell
+.\setup.ps1                       # finds Python 3.10+, makes .venv, installs deps, checks raw data
+.\run.ps1 check                   # environment doctor: verify everything is ready
+```
+
+**Manual / Linux / Mac:**
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate          # Windows
-pip install -r requirements.txt
+pip install -r requirements.txt   # or: make setup
 ```
 
 Data: the 4 `.h5ad` files (and optional `*_CoDi_KLD.csv` reference files) go in `data/raw/`.
@@ -36,7 +45,19 @@ See `src/config.py` for the exact filename → sample mapping.
 ## Running the pipeline
 
 Everything goes through `run_pipeline.py`. Each stage reads the previous stage's checkpoint
-from `data/processed/` and writes its own.
+from `data/processed/` and writes its own. On Windows, `run.ps1` is a thin wrapper around it
+(new stages appear automatically as they are registered):
+
+```powershell
+.\run.ps1                          # interactive menu
+.\run.ps1 check                    # environment doctor (= run_pipeline.py --check)
+.\run.ps1 qc -Smoke -Debug         # run a stage on the smoke subsample, verbose
+.\run.ps1 all                      # every registered stage in order
+.\run.ps1 test                     # pytest
+```
+
+The headless `run_pipeline.py` calls below are the canonical, scriptable entry point
+(`make qc` / `make check` are the Linux/Mac equivalents):
 
 ```bash
 # headless, scriptable -- the canonical entry point reproducibility/grading depends on

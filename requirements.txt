@@ -28,8 +28,13 @@ seaborn==0.13.2
 celltypist==1.7.1     # automated PBMC cell-type annotation (Stage 3, Azimuth alternative)
 gseapy==1.2.1          # pathway enrichment GO/KEGG/Reactome (Stage 5)
 scikit-misc==0.5.2     # needed for the seurat_v3 HVG flavour (Stage 1)
+upsetplot==0.9.0       # set-membership (unique/shared/emergent) figures (Stage 6)
 
 # --- output formatting (presentation layer only, no analysis dependency) ---
 rich==15.0.0         # promoted from transitive to direct: drives all --debug panels/tables/progress bars
 plotext==5.3.2        # character-based terminal plots for --debug QC verification (no sixel/kitty needed)
 questionary==2.1.1    # arrow-key stage-selection menu when run_pipeline.py is launched with no args
+python-pptx==1.0.2    # builds the results slide deck (deliverable) from saved figures
+
+# --- testing ---
+pytest==9.1.1         # intent tests for every stage (offline, synthetic AnnData, no heavy data)

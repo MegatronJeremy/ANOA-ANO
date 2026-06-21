@@ -169,6 +169,60 @@ def run_stage(spec: StageSpec, args, log):
 
 
 # ---------------------------------------------------------------------------
+# Environment doctor (`--check`): a quick, side-effect-free readiness report.
+# Verifies the things a run depends on -- Python version, raw data files,
+# existing checkpoints, and importability of the heavy libraries -- without
+# loading any data or running an analysis. Mirrors the PSZ `debug` command.
+# ---------------------------------------------------------------------------
+
+def run_doctor() -> bool:
+    from rich.table import Table
+    from rich.panel import Panel
+    console = get_console()
+    console.print(Panel("[bold]Environment check[/bold]", title="DOCTOR", border_style="cyan"))
+
+    ok = True
+
+    # Python
+    py = ".".join(str(v) for v in sys.version_info[:3])
+    py_ok = sys.version_info[:2] >= (3, 10)
+    ok = ok and py_ok
+
+    # Raw data files
+    data_tbl = Table(title="Raw data files (data/raw/)", header_style="bold cyan")
+    data_tbl.add_column("sample"); data_tbl.add_column("file"); data_tbl.add_column("present")
+    for label, fname in cfg.SAMPLES.items():
+        path = cfg.RAW_DIR / fname
+        present = path.exists()
+        ok = ok and present
+        size = f"{path.stat().st_size / 1e6:.0f} MB" if present else "-"
+        data_tbl.add_row(label, fname, f"[green]yes[/green] ({size})" if present else "[red]MISSING[/red]")
+
+    # Checkpoints
+    ckpts = sorted(p.name for p in cfg.PROCESSED_DIR.glob("*.h5ad"))
+    ckpt_str = ", ".join(ckpts) if ckpts else "[yellow]none yet[/yellow]"
+
+    # Key libraries
+    libs = ["scanpy", "anndata", "harmonypy", "leidenalg", "celltypist",
+            "gseapy", "skmisc", "rich", "plotext", "questionary", "pytest"]
+    lib_tbl = Table(title="Key libraries", header_style="bold cyan")
+    lib_tbl.add_column("library"); lib_tbl.add_column("import")
+    import importlib.util
+    for name in libs:
+        found = importlib.util.find_spec(name) is not None
+        ok = ok and found
+        lib_tbl.add_row(name, "[green]ok[/green]" if found else "[red]MISSING[/red]")
+
+    console.print(f"Python: {py}  " + ("[green](>= 3.10, ok)[/green]" if py_ok else "[red](need >= 3.10)[/red]"))
+    console.print(data_tbl)
+    console.print(f"Checkpoints in data/processed/: {ckpt_str}")
+    console.print(lib_tbl)
+    console.print(Panel("[bold green]All good.[/bold green]" if ok else "[bold red]Problems found -- see above.[/bold red]",
+                        border_style="green" if ok else "red"))
+    return ok
+
+
+# ---------------------------------------------------------------------------
 # Interactive menu (convenience wrapper only -- see module docstring)
 # ---------------------------------------------------------------------------
 
@@ -276,6 +330,9 @@ def build_parser() -> argparse.ArgumentParser:
                               f"cells/sample) to verify the pipeline executes end-to-end quickly.")
     parser.add_argument("--subsample", type=int, default=None, metavar="N",
                          help="Like --smoke-test but with a custom N cells/sample.")
+    parser.add_argument("--check", action="store_true",
+                         help="Environment doctor: verify Python, raw data, checkpoints and "
+                              "libraries without running any analysis, then exit.")
     return parser
 
 
@@ -284,6 +341,10 @@ def main():
     args = parser.parse_args()
 
     _fix_console_encoding()
+
+    if args.check:
+        setup_logging(debug=False)
+        sys.exit(0 if run_doctor() else 1)
 
     if args.stage is None:
         # No --stage given. Only launch the menu in a real interactive terminal;
