@@ -42,6 +42,7 @@ from src import annotation
 from src import composition
 from src import differential_expression
 from src import size_effects
+from src import bonus
 from src.logging_utils import setup_logging, log_stage_banner, progress_spinner, get_console, get_logger
 
 
@@ -142,6 +143,19 @@ def run_size_stage(args, log):
     return None
 
 
+def run_bonus_stage(args, log):
+    is_smoke = bool(args.smoke_test or args.subsample)
+    input_name = "03_annotated_smoke" if is_smoke else "03_annotated"
+    with log_stage_banner("Bonus: additional analyses"):
+        adata = pio.load_checkpoint(input_name)
+        if is_smoke:
+            bonus.run(adata, debug=args.debug, smoke=True)
+        else:
+            with progress_spinner("Running bonus analyses"):
+                bonus.run(adata, debug=args.debug, smoke=False)
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Stage registry -- the single source of truth for both the --stage CLI
 # argument and the interactive menu. Adding a future stage (2-6) is a
@@ -216,6 +230,16 @@ STAGE_REGISTRY = {
         run_fn=run_size_stage,
         produces_checkpoint=False,
         table_outputs=("results/tables/06_size_specific_summary.csv",),
+    ),
+    "bonus": StageSpec(
+        key="bonus",
+        label="Bonus: additional analyses",
+        description="module scoring, mixture additivity, robustness, ligand-receptor, dose-response",
+        input_checkpoint="03_annotated",
+        output_checkpoint="07_bonus",   # label only; table stage
+        run_fn=run_bonus_stage,
+        produces_checkpoint=False,
+        table_outputs=("results/tables/07_dose_response.csv",),
     ),
 }
 

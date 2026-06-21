@@ -31,8 +31,11 @@ de:
 size:
 	$(PY) run_pipeline.py --stage size $(FLAGS)
 
+bonus:
+	$(PY) run_pipeline.py --stage bonus $(FLAGS)
+
 # Run every registered stage in order. Keep in sync with STAGE_REGISTRY.
-all: qc integration annotation composition de size
+all: qc integration annotation composition de size bonus
 
 test:
 	$(PY) -m pytest
