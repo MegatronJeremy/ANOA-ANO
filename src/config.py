@@ -59,14 +59,20 @@ BATCH_KEY     = "sample"    # .obs column distinguishing the four samples
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
-# QC thresholds (Stage 1). Starting points; Stage 1 in --debug mode prints
-# the actual percentiles for this dataset so these can be re-justified
-# against real numbers rather than left as guesses.
+# QC thresholds (Stage 1). Justified against the real distribution of all
+# 34,078 cells (printed by `--stage qc --debug`; measured 2026-06-21):
+#   n_genes_by_counts: min=203, p1=541, p50=2122, p95=4074, p99=6296, max=10956
+#   total_counts:      min=499, p50=5468, p95=15409, p99=35629, max=215279
+#   pct_counts_mt:     min=0.0, p50=4.0, p95=7.9, p99=17.3, max=89.6
+# The data is clearly already pre-filtered upstream (no cell below 203 genes /
+# 499 counts), so the lower gene floor is a safety net, not the active filter.
 # ---------------------------------------------------------------------------
-QC_MIN_GENES_PER_CELL = 200     # below this -> likely empty droplet / debris
-QC_MAX_GENES_PER_CELL = 6000    # above this -> likely doublet (two cells in one droplet)
-QC_MAX_PCT_MITO       = 15.0    # high mito% -> dying / stressed cell
-QC_MIN_CELLS_PER_GENE = 3       # drop genes detected in fewer than this many cells
+QC_MIN_GENES_PER_CELL = 200     # safety floor: min observed is 203, so this is a guard
+                                 # against empty droplets, not the binding filter here
+QC_MAX_GENES_PER_CELL = 6000    # ~p99 (6296): drops the top ~1% as putative doublets
+QC_MAX_PCT_MITO       = 15.0    # between p95 (7.9) and p99 (17.3): drops ~2-3% dying/
+                                 # stressed cells with high mito% without cutting the bulk
+QC_MIN_CELLS_PER_GENE = 3       # standard: drop genes seen in < 3 cells (noise / near-absent)
 
 # ---------------------------------------------------------------------------
 # Normalization / HVG (Stage 1)

@@ -66,11 +66,11 @@ def run_qc_stage(args, log):
         if is_smoke:
             n = args.subsample or cfg.SMOKE_TEST_CELLS_PER_SAMPLE
             adata = pio.subsample_for_smoke_test(adata, n_per_sample=n, seed=cfg.RANDOM_SEED)
-            adata = qc.run(adata, debug=args.debug)
+            adata = qc.run(adata, debug=args.debug, smoke=True)
         else:
             # Full runs take ~minutes; smoke tests are seconds and don't need a spinner.
             with progress_spinner("Running QC filtering, normalization & HVG selection"):
-                adata = qc.run(adata, debug=args.debug)
+                adata = qc.run(adata, debug=args.debug, smoke=False)
         checkpoint_name = "01_qc_done_smoke" if is_smoke else "01_qc_done"
         pio.save_checkpoint(adata, checkpoint_name)
     return adata

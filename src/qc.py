@@ -166,7 +166,56 @@ def select_hvgs(adata):
     return adata
 
 
-def run(adata, debug: bool = False):
+_QC_METRICS = ["n_genes_by_counts", "total_counts", "pct_counts_mt"]
+
+
+def save_qc_figures(obs_before, obs_after, suffix: str = ""):
+    """
+    Save matplotlib QC figures to results/figures/ (PNG): per-sample violins of
+    the 3 QC metrics before and after filtering, and a total_counts vs %mito
+    scatter (pre-filter) with the thresholds drawn as lines. These are the
+    persisted deliverable figures; the --debug terminal plots are only a quick
+    in-session look. `suffix` is "_smoke" on smoke runs so they never overwrite
+    the full-run figures.
+    """
+    import matplotlib
+    matplotlib.use("Agg")  # headless: never needs a display, safe under CI/pipe
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    log = get_logger()
+
+    def _violin(obs, when, fname):
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+        for ax, metric in zip(axes, _QC_METRICS):
+            sns.violinplot(data=obs, x="sample", y=metric, ax=ax, cut=0, density_norm="width")
+            ax.set_title(f"{metric} ({when} QC)")
+            ax.tick_params(axis="x", rotation=30)
+        fig.tight_layout()
+        out = cfg.FIG_DIR / fname
+        fig.savefig(out, dpi=120)
+        plt.close(fig)
+        return out
+
+    f1 = _violin(obs_before, "before", f"01_qc_violin_before{suffix}.png")
+    f2 = _violin(obs_after, "after", f"01_qc_violin_after{suffix}.png")
+
+    fig, ax = plt.subplots(figsize=(7, 6))
+    sns.scatterplot(data=obs_before, x="total_counts", y="pct_counts_mt",
+                    hue="sample", s=6, alpha=0.4, edgecolor=None, ax=ax)
+    ax.axhline(cfg.QC_MAX_PCT_MITO, color="red", ls="--", lw=1,
+               label=f"max %mito = {cfg.QC_MAX_PCT_MITO}")
+    ax.set_title("total_counts vs %mito (pre-filter)")
+    ax.legend(markerscale=2, fontsize=8)
+    fig.tight_layout()
+    f3 = cfg.FIG_DIR / f"01_qc_scatter_counts_mito{suffix}.png"
+    fig.savefig(f3, dpi=120)
+    plt.close(fig)
+
+    log.info(f"saved QC figures -> {f1.name}, {f2.name}, {f3.name}")
+
+
+def run(adata, debug: bool = False, smoke: bool = False):
     """Run the full Stage 1 pipeline on an already-loaded, raw-counts AnnData."""
     log = get_logger()
     describe_adata(adata, "qc:input")
@@ -175,7 +224,14 @@ def run(adata, debug: bool = False):
     if debug:
         log_qc_distributions(adata)
 
+    # Snapshot the pre-filter QC metrics (for the "before" violin) before
+    # apply_filters subsets the cells.
+    obs_before = adata.obs[_QC_METRICS + ["sample"]].copy()
+
     adata = apply_filters(adata)
+    save_qc_figures(obs_before, adata.obs[_QC_METRICS + ["sample"]].copy(),
+                    suffix="_smoke" if smoke else "")
+
     adata = normalize_and_log(adata)
     adata = select_hvgs(adata)
 
