@@ -88,7 +88,7 @@ exact same stage functions as the `--stage` flag.
 | 2. Integration & clustering | done (`--stage integration`) |
 | 3. Cell-type annotation | done (`--stage annotation`) — celltypist + lineage, cross-checked vs Azimuth (92.7%) & CoDi (93.1%) |
 | 4. Composition analysis | done (`--stage composition`) — proportions + log2 fold-change vs control |
-| 5. Differential expression + pathway enrichment | in progress |
+| 5. Differential expression + pathway enrichment | done (`--stage de`) — per-lineage Wilcoxon + volcano + Enrichr GO/KEGG/Reactome |
 | 6. Size-specific effects | in progress |
 
 ## Repo layout

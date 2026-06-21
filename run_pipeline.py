@@ -40,6 +40,7 @@ from src import qc
 from src import integration
 from src import annotation
 from src import composition
+from src import differential_expression
 from src.logging_utils import setup_logging, log_stage_banner, progress_spinner, get_console, get_logger
 
 
@@ -119,6 +120,19 @@ def run_composition_stage(args, log):
     return adata
 
 
+def run_de_stage(args, log):
+    is_smoke = bool(args.smoke_test or args.subsample)
+    input_name = "03_annotated_smoke" if is_smoke else "03_annotated"
+    with log_stage_banner("Stage 5: Differential expression & enrichment"):
+        adata = pio.load_checkpoint(input_name)
+        if is_smoke:
+            differential_expression.run(adata, debug=args.debug, smoke=True)
+        else:
+            with progress_spinner("Running per-lineage Wilcoxon DE & pathway enrichment"):
+                differential_expression.run(adata, debug=args.debug, smoke=False)
+    return adata
+
+
 # ---------------------------------------------------------------------------
 # Stage registry -- the single source of truth for both the --stage CLI
 # argument and the interactive menu. Adding a future stage (2-6) is a
@@ -174,7 +188,17 @@ STAGE_REGISTRY = {
         produces_checkpoint=False,
         table_outputs=("results/tables/04_composition_proportions.csv",),
     ),
-    # Stage 5-6 register here, one line each.
+    "de": StageSpec(
+        key="de",
+        label="Stage 5: Differential expression & enrichment",
+        description="per-lineage Wilcoxon (exposed vs control) + volcano + pathway enrichment",
+        input_checkpoint="03_annotated",
+        output_checkpoint="05_de",   # label only; table stage
+        run_fn=run_de_stage,
+        produces_checkpoint=False,
+        table_outputs=("results/tables/05_DE_recurrent_genes.csv",),
+    ),
+    # Stage 6 registers here.
 }
 
 

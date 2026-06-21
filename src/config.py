@@ -98,6 +98,17 @@ CLUSTER_BATCH_PURITY_WARN = 0.90   # warn if a cluster is > 90% one sample (inte
                                     # one-sample blobs, unless a population is truly condition-specific)
 
 # ---------------------------------------------------------------------------
+# Differential expression + pathway enrichment (Stage 5). One donor, one sample
+# per condition -> NO biological replicates, so DE is a cell-level Wilcoxon
+# (scanpy rank_genes_groups), NOT pseudobulk/DESeq2, and is reported with an
+# explicit pseudoreplication caveat. There is no external gene-level reference.
+# ---------------------------------------------------------------------------
+DE_MIN_CELLS_PER_GROUP = 30     # skip a (lineage, condition) combo if either group is smaller
+DE_PADJ_THRESHOLD      = 0.05   # adjusted-p cutoff for "significant"
+DE_LFC_THRESHOLD       = 1.0    # |log2FC| cutoff for "significant" (and for enrichment input)
+ENRICHR_GENE_SETS = ["GO_Biological_Process_2021", "KEGG_2021_Human", "Reactome_2022"]
+
+# ---------------------------------------------------------------------------
 # Reproducibility
 # ---------------------------------------------------------------------------
 RANDOM_SEED = 0   # set everywhere: numpy, scanpy, harmony, leiden, UMAP
