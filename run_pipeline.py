@@ -424,6 +424,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--check", action="store_true",
                          help="Environment doctor: verify Python, raw data, checkpoints and "
                               "libraries without running any analysis, then exit.")
+    parser.add_argument("--all", action="store_true",
+                         help="Run every registered stage in order (reproduce everything). "
+                              "Honours --smoke-test/--debug; --all --smoke-test is the fast "
+                              "end-to-end check of the whole pipeline.")
     return parser
 
 
@@ -436,6 +440,18 @@ def main():
     if args.check:
         setup_logging(debug=False)
         sys.exit(0 if run_doctor() else 1)
+
+    if args.all:
+        log = setup_logging(debug=args.debug)
+        set_seeds(cfg.RANDOM_SEED)
+        if args.smoke_test or args.subsample:
+            log.info(f"SMOKE TEST MODE: {args.subsample or cfg.SMOKE_TEST_CELLS_PER_SAMPLE} cells/sample")
+        for spec in STAGE_REGISTRY.values():
+            if not run_stage(spec, args, log):
+                log.error(f"--all stopped at stage '{spec.key}'.")
+                sys.exit(1)
+        log.info("--all: all stages completed.")
+        return
 
     if args.stage is None:
         # No --stage given. Only launch the menu in a real interactive terminal;

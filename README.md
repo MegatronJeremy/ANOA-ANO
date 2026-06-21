@@ -68,6 +68,10 @@ python run_pipeline.py --stage qc                              # quiet mode
 python run_pipeline.py --stage integration --smoke-test --debug
 python run_pipeline.py --stage integration --debug             # ~7-8 min on the full dataset
 
+# reproduce EVERYTHING (all six stages in order):
+python run_pipeline.py --all --smoke-test                       # fast end-to-end check (~2-3 min)
+python run_pipeline.py --all                                     # full reproduction (~15-20 min)
+
 # interactive launcher (optional convenience, not a separate code path):
 python run_pipeline.py                                          # menu, only in a real terminal;
                                                                   # piped/CI invocations just print help
@@ -90,6 +94,25 @@ exact same stage functions as the `--stage` flag.
 | 4. Composition analysis | done (`--stage composition`) — proportions + log2 fold-change vs control |
 | 5. Differential expression + pathway enrichment | done (`--stage de`) — per-lineage Wilcoxon + volcano + Enrichr GO/KEGG/Reactome |
 | 6. Size-specific effects | done (`--stage size`) — unique/shared/mixture-emergent genes per lineage |
+
+All six stages are registered in `STAGE_REGISTRY` and run from the same code path (`--stage`,
+the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`, 35 tests).
+
+### Deliverables checklist
+
+- [x] **GitHub repo + environment file + README** (20 pts) — this repo; `requirements.txt`;
+  `--all` reproduces results.
+- [ ] **3–5 additional analyses** (10 pts) — candidates proposed; implementation in progress.
+- [ ] **PowerPoint slides** (10 pts) — to build from `results/figures/`.
+- [ ] **Video presentation** (20 pts) — script + recording.
+
+### Key result
+
+Within each immune lineage, DE was computed for each exposed sample vs control (cell-level
+Wilcoxon — one donor, no biological replicates, so this is exploratory and explicitly
+caveated). Monocytes respond most strongly; 200 nm particles drive more lineage-unique genes
+than 40 nm; and the 40 nm + 200 nm **mixture produces an emergent monocyte response** (genes
+significant only in the mixture, in neither single size). See `results/tables/06_size_specific_*`.
 
 ## Repo layout
 
