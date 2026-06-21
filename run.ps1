@@ -40,8 +40,9 @@ function Invoke-Stage($stage) {
 switch ($Command.ToLower()) {
     "menu"  { & $py (Join-Path $root "run_pipeline.py") }
     "check" { & $py (Join-Path $root "run_pipeline.py") --check }
-    "test"  { & $py -m pytest $root }
-    "all"   { foreach ($s in $Stages) { Invoke-Stage $s } }
+    "test"   { & $py -m pytest $root }
+    "slides" { & $py -m src.make_slides }
+    "all"    { foreach ($s in $Stages) { Invoke-Stage $s } }
     default {
         # Forward any other token straight to --stage. run_pipeline.py's argparse
         # is the source of truth for valid stage names, so newly registered stages

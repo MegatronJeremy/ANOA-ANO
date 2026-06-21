@@ -102,9 +102,11 @@ the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`,
 
 - [x] **GitHub repo + environment file + README** (20 pts) — this repo; `requirements.txt`;
   `--all` reproduces results.
-- [ ] **3–5 additional analyses** (10 pts) — candidates proposed; implementation in progress.
-- [ ] **PowerPoint slides** (10 pts) — to build from `results/figures/`.
-- [ ] **Video presentation** (20 pts) — script + recording.
+- [x] **3–5 additional analyses** (10 pts) — five implemented (`--stage bonus`): module scoring,
+  mixture additivity, clustering robustness, ligand-receptor shift, dose-response.
+- [x] **PowerPoint slides** (10 pts) — `results/slides/GI_nanoplastic.pptx`, rebuilt from figures
+  via `python -m src.make_slides` (`.\run.ps1 slides`).
+- [x] **Video presentation** (20 pts) — narration script in `VIDEO_SCRIPT.md` (recording is manual).
 
 ### Key result
 
