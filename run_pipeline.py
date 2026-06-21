@@ -82,11 +82,11 @@ def run_integration_stage(args, log):
     with log_stage_banner("Stage 2: Integration & clustering"):
         adata = pio.load_checkpoint(input_name)
         if is_smoke:
-            adata = integration.run(adata, debug=args.debug)
+            adata = integration.run(adata, debug=args.debug, smoke=True)
         else:
             # PCA + Harmony + neighbors/UMAP (x2) + Leiden take a few minutes on the full dataset.
             with progress_spinner("Running PCA, Harmony integration, UMAP & Leiden clustering"):
-                adata = integration.run(adata, debug=args.debug)
+                adata = integration.run(adata, debug=args.debug, smoke=False)
         checkpoint_name = "02_clustered_smoke" if is_smoke else "02_clustered"
         pio.save_checkpoint(adata, checkpoint_name)
     return adata

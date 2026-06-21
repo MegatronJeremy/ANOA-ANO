@@ -173,7 +173,71 @@ def cluster_leiden(adata, debug: bool = False):
     return adata
 
 
-def run(adata, debug: bool = False):
+def cluster_sample_composition(adata):
+    """
+    Quantify batch mixing: per Leiden cluster, the fraction coming from each
+    sample. Good integration means most clusters are a blend of all four
+    samples; a cluster that is almost entirely one sample is flagged (either a
+    genuinely condition-specific population or a sign integration failed).
+    Returns the fraction DataFrame (clusters x samples) and also saves it as a
+    CSV deliverable.
+    """
+    import pandas as pd
+    log = get_logger()
+    counts = pd.crosstab(adata.obs["leiden"], adata.obs[cfg.BATCH_KEY])
+    frac = counts.div(counts.sum(axis=1), axis=0)
+
+    log_table(
+        "Per-cluster sample composition (fraction)",
+        ["cluster"] + list(frac.columns),
+        [[idx] + [f"{frac.loc[idx, c]:.2f}" for c in frac.columns] for idx in frac.index],
+    )
+
+    dominant = frac.max(axis=1)
+    impure = dominant[dominant > cfg.CLUSTER_BATCH_PURITY_WARN]
+    for cl, val in impure.items():
+        top_sample = frac.loc[cl].idxmax()
+        log.warning(f"cluster {cl} is {val:.0%} '{top_sample}' (> "
+                    f"{cfg.CLUSTER_BATCH_PURITY_WARN:.0%}): check whether this is a real "
+                    f"condition-specific population or a batch-correction failure")
+    return frac
+
+
+def save_integration_figures(adata, suffix: str = ""):
+    """
+    Save UMAP PNGs to results/figures/: before vs after Harmony coloured by
+    sample (the batch-correction effect), and the post-integration UMAP
+    coloured by Leiden cluster. `suffix` is "_smoke" on smoke runs.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    log = get_logger()
+
+    def _umap(coords, labels, title, fname):
+        fig, ax = plt.subplots(figsize=(7, 6))
+        labels = np.asarray(labels).astype(str)
+        for g in sorted(set(labels), key=lambda x: (len(x), x)):
+            m = labels == g
+            ax.scatter(coords[m, 0], coords[m, 1], s=4, alpha=0.5, label=g, edgecolor="none")
+        ax.set_title(title); ax.set_xlabel("UMAP1"); ax.set_ylabel("UMAP2")
+        ax.legend(markerscale=3, fontsize=7, ncol=2, frameon=False)
+        fig.tight_layout()
+        fig.savefig(cfg.FIG_DIR / fname, dpi=120)
+        plt.close(fig)
+        return fname
+
+    sample = adata.obs[cfg.BATCH_KEY].values
+    f1 = _umap(adata.obsm["X_umap_pre_harmony"], sample,
+               "UMAP before Harmony (by sample)", f"02_umap_pre_harmony_by_sample{suffix}.png")
+    f2 = _umap(adata.obsm["X_umap"], sample,
+               "UMAP after Harmony (by sample)", f"02_umap_by_sample{suffix}.png")
+    f3 = _umap(adata.obsm["X_umap"], adata.obs["leiden"].values,
+               "UMAP after Harmony (by cluster)", f"02_umap_by_cluster{suffix}.png")
+    log.info(f"saved integration figures -> {f1}, {f2}, {f3}")
+
+
+def run(adata, debug: bool = False, smoke: bool = False):
     """Run the full Stage 2 pipeline on a Stage-1 checkpoint AnnData."""
     describe_adata(adata, "integration:input")
 
@@ -182,6 +246,10 @@ def run(adata, debug: bool = False):
     adata = integrate_harmony(adata, debug=debug)
     adata = compute_post_integration_umap(adata, debug=debug)
     adata = cluster_leiden(adata, debug=debug)
+
+    frac = cluster_sample_composition(adata)
+    frac.to_csv(cfg.TABLE_DIR / f"02_cluster_composition{'_smoke' if smoke else ''}.csv")
+    save_integration_figures(adata, suffix="_smoke" if smoke else "")
 
     describe_adata(adata, "integration:output")
     return adata

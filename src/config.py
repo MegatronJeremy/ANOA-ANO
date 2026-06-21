@@ -93,6 +93,9 @@ LEIDEN_RES  = 1.0    # clustering resolution; chosen to land roughly in the ~8-1
 # for a manual look rather than letting it pass silently).
 CLUSTER_TINY_FRACTION     = 0.01   # warn if a cluster has < 1% of all cells
 CLUSTER_DOMINANT_FRACTION = 0.60   # warn if a cluster has > 60% of all cells
+CLUSTER_BATCH_PURITY_WARN = 0.90   # warn if a cluster is > 90% one sample (integration
+                                    # likely failed -- clusters should mix samples, not be
+                                    # one-sample blobs, unless a population is truly condition-specific)
 
 # ---------------------------------------------------------------------------
 # Reproducibility
