@@ -39,6 +39,7 @@ from src import io as pio
 from src import qc
 from src import integration
 from src import annotation
+from src import composition
 from src.logging_utils import setup_logging, log_stage_banner, progress_spinner, get_console, get_logger
 
 
@@ -108,6 +109,16 @@ def run_annotation_stage(args, log):
     return adata
 
 
+def run_composition_stage(args, log):
+    is_smoke = bool(args.smoke_test or args.subsample)
+    input_name = "03_annotated_smoke" if is_smoke else "03_annotated"
+    with log_stage_banner("Stage 4: Composition analysis"):
+        adata = pio.load_checkpoint(input_name)
+        # Table stage: writes CSVs + figures, no 2.7 GB checkpoint.
+        composition.run(adata, debug=args.debug, smoke=is_smoke)
+    return adata
+
+
 # ---------------------------------------------------------------------------
 # Stage registry -- the single source of truth for both the --stage CLI
 # argument and the interactive menu. Adding a future stage (2-6) is a
@@ -123,6 +134,9 @@ class StageSpec:
     input_checkpoint: Optional[str]   # checkpoint this stage reads, or None if it loads raw data
     output_checkpoint: str            # checkpoint name this stage writes (full-run name)
     run_fn: Callable                  # run_fn(args, log) -> AnnData; same function for CLI and menu
+    produces_checkpoint: bool = True  # stages 1-3 write a .h5ad; stages 4-6 only write tables/figures
+    table_outputs: tuple = ()         # for table stages: representative result file(s) (relative to
+                                       # PROJECT_ROOT) whose existence marks the stage "done"
 
 
 STAGE_REGISTRY = {
@@ -150,7 +164,17 @@ STAGE_REGISTRY = {
         output_checkpoint="03_annotated",
         run_fn=run_annotation_stage,
     ),
-    # Stage 4-6 register here, one line each.
+    "composition": StageSpec(
+        key="composition",
+        label="Stage 4: Composition analysis",
+        description="per-sample lineage proportions + log2 fold-change vs control",
+        input_checkpoint="03_annotated",
+        output_checkpoint="04_composition",   # label only; this stage writes tables, not a checkpoint
+        run_fn=run_composition_stage,
+        produces_checkpoint=False,
+        table_outputs=("results/tables/04_composition_proportions.csv",),
+    ),
+    # Stage 5-6 register here, one line each.
 }
 
 
@@ -166,8 +190,15 @@ def stage_status(spec: StageSpec) -> dict:
         input_ready = (cfg.PROCESSED_DIR / f"{spec.input_checkpoint}.h5ad").exists()
         input_desc = f"{spec.input_checkpoint}.h5ad"
 
-    full_done = (cfg.PROCESSED_DIR / f"{spec.output_checkpoint}.h5ad").exists()
-    smoke_done = (cfg.PROCESSED_DIR / f"{spec.output_checkpoint}_smoke.h5ad").exists()
+    if spec.produces_checkpoint:
+        full_done = (cfg.PROCESSED_DIR / f"{spec.output_checkpoint}.h5ad").exists()
+        smoke_done = (cfg.PROCESSED_DIR / f"{spec.output_checkpoint}_smoke.h5ad").exists()
+    else:
+        # Table stage: "done" means its representative result file(s) exist.
+        def _smoke(p):  # results/tables/x.csv -> results/tables/x_smoke.csv
+            return p[:-4] + "_smoke" + p[-4:] if "." in p[-5:] else p + "_smoke"
+        full_done = all((cfg.PROJECT_ROOT / p).exists() for p in spec.table_outputs)
+        smoke_done = all((cfg.PROJECT_ROOT / _smoke(p)).exists() for p in spec.table_outputs)
     return {
         "input_ready": input_ready,
         "input_desc": input_desc,
