@@ -38,6 +38,7 @@ from src import config as cfg
 from src import io as pio
 from src import qc
 from src import integration
+from src import annotation
 from src.logging_utils import setup_logging, log_stage_banner, progress_spinner, get_console, get_logger
 
 
@@ -92,6 +93,21 @@ def run_integration_stage(args, log):
     return adata
 
 
+def run_annotation_stage(args, log):
+    is_smoke = bool(args.smoke_test or args.subsample)
+    input_name = "02_clustered_smoke" if is_smoke else "02_clustered"
+    with log_stage_banner("Stage 3: Cell-type annotation"):
+        adata = pio.load_checkpoint(input_name)
+        if is_smoke:
+            adata = annotation.run(adata, debug=args.debug, smoke=True)
+        else:
+            with progress_spinner("Running celltypist annotation & cross-check"):
+                adata = annotation.run(adata, debug=args.debug, smoke=False)
+        checkpoint_name = "03_annotated_smoke" if is_smoke else "03_annotated"
+        pio.save_checkpoint(adata, checkpoint_name)
+    return adata
+
+
 # ---------------------------------------------------------------------------
 # Stage registry -- the single source of truth for both the --stage CLI
 # argument and the interactive menu. Adding a future stage (2-6) is a
@@ -126,13 +142,15 @@ STAGE_REGISTRY = {
         output_checkpoint="02_clustered",
         run_fn=run_integration_stage,
     ),
-    # Stage 3-6 register here, one line each, e.g.:
-    # "annotation": StageSpec(
-    #     key="annotation", label="Stage 3: Cell type annotation",
-    #     description="celltypist + marker genes -> lineage labels",
-    #     input_checkpoint="02_clustered", output_checkpoint="03_annotated",
-    #     run_fn=run_annotation_stage,
-    # ),
+    "annotation": StageSpec(
+        key="annotation",
+        label="Stage 3: Cell-type annotation",
+        description="celltypist + marker genes -> lineage labels, cross-checked vs Azimuth & CoDi",
+        input_checkpoint="02_clustered",
+        output_checkpoint="03_annotated",
+        run_fn=run_annotation_stage,
+    ),
+    # Stage 4-6 register here, one line each.
 }
 
 

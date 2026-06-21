@@ -86,7 +86,7 @@ exact same stage functions as the `--stage` flag.
 |---|---|
 | 1. QC & preprocessing | done (`--stage qc`) |
 | 2. Integration & clustering | done (`--stage integration`) |
-| 3. Cell-type annotation | in progress |
+| 3. Cell-type annotation | done (`--stage annotation`) — celltypist + lineage, cross-checked vs Azimuth (92.7%) & CoDi (93.1%) |
 | 4. Composition analysis | in progress |
 | 5. Differential expression + pathway enrichment | in progress |
 | 6. Size-specific effects | in progress |
