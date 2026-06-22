@@ -378,21 +378,23 @@ def run_menu():
     log = get_logger()
 
     while True:
-        console.print()
+        # Clear between renders so the table + prompts don't stack/scroll; the
+        # status table above is the single place descriptions live, so the
+        # choices themselves stay short (just the stage label).
+        console.clear()
         _print_status_table()
 
         choices = [
-            questionary.Choice(title=f"{spec.label} -- {spec.description}", value=spec.key)
+            questionary.Choice(title=spec.label, value=spec.key)
             for spec in STAGE_REGISTRY.values()
         ]
+        choices.append(questionary.Choice(title="Run ALL stages in order", value="__all__"))
         choices.append(questionary.Choice(title="Quit", value=None))
 
         selected = questionary.select("Select a stage to run:", choices=choices).ask()
         if selected is None:
             console.print("[bold]Bye.[/bold]")
             return
-
-        spec = STAGE_REGISTRY[selected]
 
         smoke_test = questionary.confirm(
             "Run as a smoke test (small random subsample)?", default=False
@@ -424,7 +426,12 @@ def run_menu():
         log = get_logger()
         set_seeds(cfg.RANDOM_SEED)
 
-        run_stage(spec, args, log)
+        if selected == "__all__":
+            for spec in STAGE_REGISTRY.values():
+                if not run_stage(spec, args, log):
+                    break
+        else:
+            run_stage(STAGE_REGISTRY[selected], args, log)
 
         questionary.text("Press Enter to return to the menu...").ask()
 
