@@ -5,6 +5,9 @@ investigating how particle size shapes the immune response.
 
 Genomics Informatics project — ETF Belgrade.
 
+> **New here / not sure what any of this means?** Read [`VODIC.md`](VODIC.md) — a plain-language
+> guide (in Serbian) that explains the whole project, every result, and how to defend it.
+
 ## The question
 
 Four samples from one donor:
