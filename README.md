@@ -99,7 +99,7 @@ exact same stage functions as the `--stage` flag.
 | 6. Size-specific effects | done (`--stage size`) — unique/shared/mixture-emergent genes per lineage |
 
 All six stages are registered in `STAGE_REGISTRY` and run from the same code path (`--stage`,
-the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`, 35 tests).
+the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`, 37 tests).
 
 ### Deliverables checklist
 
@@ -109,7 +109,7 @@ the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`,
   mixture additivity, clustering robustness, ligand-receptor shift, dose-response.
 - [x] **PowerPoint slides** (10 pts) — `results/slides/GI_nanoplastic.pptx`, rebuilt from figures
   via `python -m src.make_slides` (`.\run.ps1 slides`).
-- [x] **Video presentation** (20 pts) — narration script in `VIDEO_SCRIPT.md` (recording is manual).
+- [x] **Video presentation** (20 pts) — narration script in `docs/VIDEO_SCRIPT.md` (recording is manual).
 
 ### Key result
 
@@ -127,15 +127,20 @@ significant only in the mixture, in neither single size). See `results/tables/06
 ├── README.md
 ├── run_pipeline.py        # driver: stage registry, --stage flags, interactive menu
 ├── src/
-│   ├── config.py          # paths, sample names, thresholds, markers, seed
-│   ├── io.py               # load samples / save+load checkpoints
-│   ├── logging_utils.py    # --debug logging, rich tables/panels, terminal plots, guard checks
-│   ├── qc.py                # Stage 1: QC & preprocessing
-│   └── integration.py        # Stage 2: Harmony integration, UMAP, Leiden clustering
-├── data/                   # raw/ and processed/ (git-ignored)
-├── results/                 # figures/ and tables/ (git-ignored)
-└── legacy/                  # old notebook-based pipeline, local reference only (git-ignored)
+│   ├── config.py                  # paths, sample names, thresholds, markers, seed
+│   ├── io.py                       # load samples / save+load checkpoints
+│   ├── logging_utils.py            # --debug logging, rich tables/panels, terminal plots, guard checks
+│   ├── qc.py                        # Stage 1: QC & preprocessing
+│   ├── integration.py               # Stage 2: Harmony integration, UMAP, Leiden clustering
+│   ├── annotation.py                # Stage 3: cell-type annotation (celltypist + lineage, cross-checked)
+│   ├── composition.py               # Stage 4: cell-type proportions + log2 fold-change vs control
+│   ├── differential_expression.py   # Stage 5: per-lineage Wilcoxon DE + volcano + pathway enrichment
+│   ├── size_effects.py              # Stage 6: unique/shared/mixture-emergent genes per lineage
+│   ├── bonus.py                     # 5 additional analyses (module scoring, additivity, robustness, L-R, dose)
+│   └── make_slides.py               # rebuild the PowerPoint deck from figures
+├── docs/                            # PROMPTOVI.md (dev roadmap), VIDEO_SCRIPT.md (narration)
+├── tests/                           # 37 offline intent tests (pytest, synthetic AnnData)
+├── data/                            # raw/ and processed/ (git-ignored)
+├── results/                         # figures/, tables/, slides/ (figures/tables git-ignored)
+└── legacy/                          # old notebook-based pipeline, local reference only (git-ignored)
 ```
-
-A full README (setup detail, per-stage explanations, bonus analyses, deliverables checklist)
-will be written once all 6 stages are built and verified.

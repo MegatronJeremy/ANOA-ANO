@@ -2,7 +2,7 @@
 
 scRNA-seq pipeline: imuni odgovor ljudskih PBMC ćelija na nanoplastiku (PSNP) u funkciji
 veličine čestice. Driver je `run_pipeline.py` (staged, `--stage`/meni), faze u `src/`.
-Detaljan razvojni roadmap je u `PROMPTOVI.md`.
+Detaljan razvojni roadmap je u `docs/PROMPTOVI.md`.
 
 ## Standardni kvalitetski okvir (poštuj na svakoj izmeni)
 
