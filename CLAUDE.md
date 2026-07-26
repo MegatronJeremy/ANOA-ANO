@@ -45,6 +45,23 @@ Detaljan razvojni roadmap je u `docs/PROMPTOVI.md`.
 - Faze 3–5 logike (legacy) su u `legacy/notebooks/*.ipynb` — portuju se u čiste `src/` module.
   Faze 4–6 proizvode tabele/figure, NE nove 2.7 GB h5ad checkpoint-e.
 
+## Verzije alata (pinned)
+
+Kanonski izvor je `requirements.txt` (venv, bez conde). Ključni paketi i tačne verzije:
+
+- **scanpy 1.11.5**, **anndata 0.12.16** — scRNA-seq core (QC, normalizacija, PCA/UMAP, DE)
+- **harmonypy 0.0.10** — batch integracija (Stage 2)
+- **leidenalg 0.12.0** — Leiden klasterovanje (Stage 2)
+- **celltypist 1.7.1** — automatska anotacija tipova ćelija (Stage 3, cross-check vs Azimuth/CoDi)
+- **scikit-misc 0.5.2** — potreban za `seurat_v3` HVG flavour (Stage 1)
+- **gseapy 1.2.1** — pathway enrichment GO/KEGG/Reactome (Stage 5)
+- **upsetplot 0.9.0** — unique/shared/emergent set figure (Stage 6)
+- **python-pptx 1.0.2** — build slide deck-a iz figura (deliverable)
+- **pytest 9.1.1** — offline intent testovi (37, sintetički AnnData)
+- Numerika: **numpy 2.4.6**, **scipy 1.17.1**, **pandas 2.3.3**, **matplotlib 3.11.0**, **seaborn 0.13.2**
+
+Ako menjaš verziju, izmeni `requirements.txt` (autoritet) pa uskladi ovu listu — ne obrnuto.
+
 ## Pokretanje
 
 ```
