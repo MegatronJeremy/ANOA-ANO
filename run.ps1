@@ -22,15 +22,28 @@ param(
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
-# Prefer the venv interpreter. If it doesn't exist yet, run setup once to create
-# it (first-run convenience) instead of failing or silently falling back to a
-# system Python that lacks the dependencies.
+# Prefer the venv interpreter. It must (a) exist and (b) actually have the
+# dependencies installed -- a half-built .venv (created but `pip install` never
+# finished) would otherwise fall through to a confusing ModuleNotFoundError at
+# runtime. So probe for a core dependency (numpy, the first thing the driver
+# imports) and run setup when the venv is missing OR incomplete.
 $py = Join-Path $root ".venv\Scripts\python.exe"
-if (-not (Test-Path $py)) {
-    Write-Host ".venv not found -- running setup first (one-time)..." -ForegroundColor Yellow
+
+function Test-VenvReady {
+    if (-not (Test-Path $py)) { return $false }
+    & $py -c "import numpy" 2>$null
+    return ($LASTEXITCODE -eq 0)
+}
+
+if (-not (Test-VenvReady)) {
+    if (Test-Path $py) {
+        Write-Host ".venv exists but dependencies are missing -- running setup to finish it..." -ForegroundColor Yellow
+    } else {
+        Write-Host ".venv not found -- running setup first (one-time)..." -ForegroundColor Yellow
+    }
     & (Join-Path $root "setup.ps1")
-    if (-not (Test-Path $py)) {
-        Write-Host "Setup did not create .venv -- see the output above." -ForegroundColor Red
+    if (-not (Test-VenvReady)) {
+        Write-Host "Setup did not produce a working .venv (numpy still not importable) -- see the output above." -ForegroundColor Red
         exit 1
     }
 }

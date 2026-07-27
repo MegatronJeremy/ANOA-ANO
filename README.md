@@ -35,8 +35,9 @@ environment file.
 ```
 
 > Prefer plain `cmd.exe` or double-clicking? `setup.bat` and `run.bat` are shims that forward
-> to the same scripts (e.g. `run.bat check`, `run.bat all`). `run` also creates the `.venv` via
-> setup automatically the first time, if it's missing.
+> to the same scripts (e.g. `run.bat check`, `run.bat all`). `run` also builds the `.venv` via
+> setup automatically if it's missing **or incomplete** (deps not fully installed), so a
+> half-finished setup self-heals on the next `run` instead of failing with a `ModuleNotFoundError`.
 
 **Manual / Linux / Mac:**
 
