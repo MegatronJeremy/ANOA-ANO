@@ -121,7 +121,7 @@ Within each immune lineage, DE was computed for each exposed sample vs control (
 Wilcoxon — one donor, no biological replicates, so this is exploratory and explicitly
 caveated). Monocytes respond most strongly; 200 nm particles drive more lineage-unique genes
 than 40 nm; and the 40 nm + 200 nm **mixture produces an emergent monocyte response** (genes
-significant only in the mixture, in neither single size). See `results/tables/06_size_specific_*`.
+significant only in the mixture, in neither single size). See `results/full/tables/06_size_specific_*`.
 
 ## Repo layout
 
@@ -145,6 +145,7 @@ significant only in the mixture, in neither single size). See `results/tables/06
 ├── docs/                            # PROMPTOVI.md (dev roadmap), VIDEO_SCRIPT.md (narration)
 ├── tests/                           # 37 offline intent tests (pytest, synthetic AnnData)
 ├── data/                            # raw/ and processed/ (git-ignored)
-├── results/                         # figures/, tables/, slides/ (figures/tables git-ignored)
+├── results/                         # full/ (real run) + smoke/ (throwaway) each hold figures/ & tables/;
+│                                     # slides/ holds the deck. figures/tables git-ignored, slides tracked
 └── legacy/                          # old notebook-based pipeline, local reference only (git-ignored)
 ```

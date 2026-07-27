@@ -2,7 +2,7 @@
 Build the results slide deck (deliverable) from the figures the pipeline saves.
 
 Reproducible: re-run after `--all` to rebuild results/slides/GI_nanoplastic.pptx
-from whatever is currently in results/figures/. Missing figures are skipped with
+from whatever is currently in results/full/figures/. Missing figures are skipped with
 a note rather than crashing, so a partial run still yields a deck.
 
     python -m src.make_slides          # or:  .\run.ps1 slides
@@ -16,7 +16,10 @@ from . import config as cfg
 
 SLIDES_DIR = cfg.PROJECT_ROOT / "results" / "slides"
 SLIDES_DIR.mkdir(parents=True, exist_ok=True)
-FIG = cfg.FIG_DIR
+
+# The deck is a deliverable built from the FULL run's figures. Resolve to the
+# full-run location explicitly (independent of any smoke run's cfg state).
+FIG = cfg.RESULTS_DIR / "full" / "figures"
 
 
 def _title_slide(prs, title, subtitle):

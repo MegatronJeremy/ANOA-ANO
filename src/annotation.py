@@ -164,7 +164,7 @@ def cross_check(adata):
 
 
 def save_annotation_figures(adata, suffix: str = ""):
-    """UMAP coloured by lineage + marker-gene dotplot, to results/figures/."""
+    """UMAP coloured by lineage + marker-gene dotplot, to cfg.FIG_DIR (results/{full,smoke}/figures/)."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -202,9 +202,8 @@ def run(adata, debug: bool = False, smoke: bool = False):
 
     adata = annotate_celltypist(adata, debug=debug)
     df = cross_check(adata)
-    df.to_csv(cfg.TABLE_DIR / f"03_annotation_agreement{'_smoke' if smoke else ''}.csv",
-              index=False)
-    save_annotation_figures(adata, suffix="_smoke" if smoke else "")
+    df.to_csv(cfg.TABLE_DIR / "03_annotation_agreement.csv", index=False)
+    save_annotation_figures(adata)  # smoke/full split is by directory, not filename
 
     describe_adata(adata, "annotation:output")
     return adata

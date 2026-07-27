@@ -48,7 +48,7 @@ def module_scoring(adata, smoke=False):
     import scanpy as sc
     import pandas as pd
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     for name, genes in GENE_MODULES.items():
         present = [g for g in genes if g in adata.var_names]
         if not present:
@@ -87,7 +87,7 @@ def mixture_additivity(smoke=False):
     import pandas as pd
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     de = load_de_results(smoke=smoke)
     c40 = next(c for c in cfg.SAMPLES if c.endswith("40nm"))
     c200 = next(c for c in cfg.SAMPLES if c.endswith("200nm"))
@@ -131,7 +131,7 @@ def clustering_robustness(adata, smoke=False):
     from sklearn.metrics import adjusted_rand_score
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     if "X_pca_harmony" not in adata.obsm:
         log.warning("[bonus 3] no X_pca_harmony -- skipping robustness"); return
     sc.pp.neighbors(adata, n_neighbors=min(cfg.N_NEIGHBORS, adata.n_obs - 1),
@@ -164,7 +164,7 @@ def ligand_receptor(adata, smoke=False):
     import pandas as pd
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
 
     def mean_expr(genes, mask):
         present = [g for g in genes if g in adata.var_names]
@@ -208,7 +208,7 @@ def dose_response(smoke=False):
     import pandas as pd
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     de = load_de_results(smoke=smoke)
     rows = []
     for (lin, cond), df in de.items():

@@ -171,12 +171,12 @@ _QC_METRICS = ["n_genes_by_counts", "total_counts", "pct_counts_mt"]
 
 def save_qc_figures(obs_before, obs_after, suffix: str = ""):
     """
-    Save matplotlib QC figures to results/figures/ (PNG): per-sample violins of
-    the 3 QC metrics before and after filtering, and a total_counts vs %mito
-    scatter (pre-filter) with the thresholds drawn as lines. These are the
-    persisted deliverable figures; the --debug terminal plots are only a quick
-    in-session look. `suffix` is "_smoke" on smoke runs so they never overwrite
-    the full-run figures.
+    Save matplotlib QC figures (PNG) to cfg.FIG_DIR -- results/full/figures/ on a
+    real run, results/smoke/figures/ on a smoke run (the driver sets this via
+    cfg.set_run_kind). Per-sample violins of the 3 QC metrics before and after
+    filtering, and a total_counts vs %mito scatter (pre-filter) with the
+    thresholds drawn as lines. These are the persisted deliverable figures; the
+    --debug terminal plots are only a quick in-session look.
     """
     import matplotlib
     matplotlib.use("Agg")  # headless: never needs a display, safe under CI/pipe
@@ -229,8 +229,7 @@ def run(adata, debug: bool = False, smoke: bool = False):
     obs_before = adata.obs[_QC_METRICS + ["sample"]].copy()
 
     adata = apply_filters(adata)
-    save_qc_figures(obs_before, adata.obs[_QC_METRICS + ["sample"]].copy(),
-                    suffix="_smoke" if smoke else "")
+    save_qc_figures(obs_before, adata.obs[_QC_METRICS + ["sample"]].copy())
 
     adata = normalize_and_log(adata)
     adata = select_hvgs(adata)

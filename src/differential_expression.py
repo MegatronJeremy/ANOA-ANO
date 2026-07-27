@@ -46,7 +46,7 @@ def de_per_lineage(adata, smoke: bool = False):
     import scanpy as sc
     log = get_logger()
     require("lineage" in adata.obs.columns, "No 'lineage' column -- run Stage 3 first.")
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     exposed = [s for s in cfg.SAMPLES if s != cfg.CONTROL_LABEL]
 
     results, summary_rows = {}, []
@@ -112,7 +112,7 @@ def run_enrichment(results, smoke: bool = False):
     to 'skipped' (one warning) if offline -- never fails the stage."""
     import pandas as pd
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     all_rows, network_ok = [], True
     for (lin, cond), df in results.items():
         if not network_ok:
@@ -142,7 +142,7 @@ def run(adata, debug: bool = False, smoke: bool = False):
     """Run Stage 5 on a Stage-3 (annotated) checkpoint AnnData. Tables + figures
     only, no checkpoint."""
     describe_adata(adata, "de:input")
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
 
     results = de_per_lineage(adata, smoke=smoke)
     for (lin, cond), df in results.items():

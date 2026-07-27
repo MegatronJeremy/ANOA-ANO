@@ -205,9 +205,9 @@ def cluster_sample_composition(adata):
 
 def save_integration_figures(adata, suffix: str = ""):
     """
-    Save UMAP PNGs to results/figures/: before vs after Harmony coloured by
-    sample (the batch-correction effect), and the post-integration UMAP
-    coloured by Leiden cluster. `suffix` is "_smoke" on smoke runs.
+    Save UMAP PNGs to cfg.FIG_DIR (results/full/ or results/smoke/figures/):
+    before vs after Harmony coloured by sample (the batch-correction effect),
+    and the post-integration UMAP coloured by Leiden cluster.
     """
     import matplotlib
     matplotlib.use("Agg")
@@ -248,8 +248,8 @@ def run(adata, debug: bool = False, smoke: bool = False):
     adata = cluster_leiden(adata, debug=debug)
 
     frac = cluster_sample_composition(adata)
-    frac.to_csv(cfg.TABLE_DIR / f"02_cluster_composition{'_smoke' if smoke else ''}.csv")
-    save_integration_figures(adata, suffix="_smoke" if smoke else "")
+    frac.to_csv(cfg.TABLE_DIR / "02_cluster_composition.csv")
+    save_integration_figures(adata)  # smoke/full split is by directory, not filename
 
     describe_adata(adata, "integration:output")
     return adata

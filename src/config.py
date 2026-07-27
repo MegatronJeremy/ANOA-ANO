@@ -14,11 +14,31 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 RAW_DIR       = PROJECT_ROOT / "data" / "raw"        # untouched downloaded .h5ad files
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"  # per-stage checkpoints
-FIG_DIR       = PROJECT_ROOT / "results" / "figures"
-TABLE_DIR     = PROJECT_ROOT / "results" / "tables"
+RESULTS_DIR   = PROJECT_ROOT / "results"
 
-for _d in (RAW_DIR, PROCESSED_DIR, FIG_DIR, TABLE_DIR):
+for _d in (RAW_DIR, PROCESSED_DIR):
     _d.mkdir(parents=True, exist_ok=True)
+
+# FIG_DIR / TABLE_DIR are resolved under results/full/ or results/smoke/ so a
+# smoke test's throwaway figures/tables never mix with a real run's output.
+# The driver calls set_run_kind(smoke=...) once at startup; every stage reads
+# cfg.FIG_DIR / cfg.TABLE_DIR by late attribute access, so reassigning them
+# here propagates everywhere. Defaults to the full-run location on import.
+FIG_DIR   = RESULTS_DIR / "full" / "figures"
+TABLE_DIR = RESULTS_DIR / "full" / "tables"
+
+
+def set_run_kind(smoke: bool) -> None:
+    """Point FIG_DIR / TABLE_DIR at results/{smoke,full}/ and create them."""
+    global FIG_DIR, TABLE_DIR
+    kind = "smoke" if smoke else "full"
+    FIG_DIR   = RESULTS_DIR / kind / "figures"
+    TABLE_DIR = RESULTS_DIR / kind / "tables"
+    for _d in (FIG_DIR, TABLE_DIR):
+        _d.mkdir(parents=True, exist_ok=True)
+
+
+set_run_kind(smoke=False)  # default; the driver overrides this at startup
 
 # ---------------------------------------------------------------------------
 # Samples. Friendly label -> raw filename, confirmed against the actual

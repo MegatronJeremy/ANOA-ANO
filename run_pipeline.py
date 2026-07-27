@@ -209,7 +209,7 @@ STAGE_REGISTRY = {
         output_checkpoint="04_composition",   # label only; this stage writes tables, not a checkpoint
         run_fn=run_composition_stage,
         produces_checkpoint=False,
-        table_outputs=("results/tables/04_composition_proportions.csv",),
+        table_outputs=("tables/04_composition_proportions.csv",),
     ),
     "de": StageSpec(
         key="de",
@@ -219,7 +219,7 @@ STAGE_REGISTRY = {
         output_checkpoint="05_de",   # label only; table stage
         run_fn=run_de_stage,
         produces_checkpoint=False,
-        table_outputs=("results/tables/05_DE_recurrent_genes.csv",),
+        table_outputs=("tables/05_DE_recurrent_genes.csv",),
     ),
     "size": StageSpec(
         key="size",
@@ -229,7 +229,7 @@ STAGE_REGISTRY = {
         output_checkpoint="06_size_effects",  # label only; table stage
         run_fn=run_size_stage,
         produces_checkpoint=False,
-        table_outputs=("results/tables/06_size_specific_summary.csv",),
+        table_outputs=("tables/06_size_specific_summary.csv",),
     ),
     "bonus": StageSpec(
         key="bonus",
@@ -239,7 +239,7 @@ STAGE_REGISTRY = {
         output_checkpoint="07_bonus",   # label only; table stage
         run_fn=run_bonus_stage,
         produces_checkpoint=False,
-        table_outputs=("results/tables/07_dose_response.csv",),
+        table_outputs=("tables/07_dose_response.csv",),
     ),
 }
 
@@ -261,10 +261,10 @@ def stage_status(spec: StageSpec) -> dict:
         smoke_done = (cfg.PROCESSED_DIR / f"{spec.output_checkpoint}_smoke.h5ad").exists()
     else:
         # Table stage: "done" means its representative result file(s) exist.
-        def _smoke(p):  # results/tables/x.csv -> results/tables/x_smoke.csv
-            return p[:-4] + "_smoke" + p[-4:] if "." in p[-5:] else p + "_smoke"
-        full_done = all((cfg.PROJECT_ROOT / p).exists() for p in spec.table_outputs)
-        smoke_done = all((cfg.PROJECT_ROOT / _smoke(p)).exists() for p in spec.table_outputs)
+        # table_outputs are paths relative to results/; the full and smoke runs
+        # write the same names under results/full/ and results/smoke/.
+        full_done = all((cfg.RESULTS_DIR / "full" / p).exists() for p in spec.table_outputs)
+        smoke_done = all((cfg.RESULTS_DIR / "smoke" / p).exists() for p in spec.table_outputs)
     return {
         "input_ready": input_ready,
         "input_desc": input_desc,
@@ -275,6 +275,8 @@ def stage_status(spec: StageSpec) -> dict:
 
 def run_stage(spec: StageSpec, args, log):
     """The one code path both the CLI and the menu call to actually run a stage."""
+    # Route figures/tables to results/{smoke,full}/ before the stage writes any.
+    cfg.set_run_kind(smoke=bool(args.smoke_test or args.subsample))
     try:
         spec.run_fn(args, log)
         return True

@@ -4,11 +4,11 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
-# results are regenerated; keep a few final figures by hand if you want them in slides
-results/figures/*
-results/tables/*
-!results/figures/.gitkeep
-!results/tables/.gitkeep
+# results are regenerated (full/ = real run, smoke/ = throwaway smoke-test output)
+results/full/*
+results/smoke/*
+!results/full/.gitkeep
+!results/smoke/.gitkeep
 
 # python / jupyter
 __pycache__/

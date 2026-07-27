@@ -35,7 +35,7 @@ def load_de_results(smoke: bool = False):
     """Read Stage 5's per-(lineage, condition) DE tables back in as
     {(lineage, condition): df}."""
     import pandas as pd
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     conds = [s for s in cfg.SAMPLES if s != cfg.CONTROL_LABEL]
     out = {}
     for f in cfg.TABLE_DIR.glob(f"05_DE_*_vs_control{sfx}.csv"):
@@ -95,7 +95,7 @@ def run(adata=None, debug: bool = False, smoke: bool = False):
     -- the inputs are Stage 5's DE CSVs."""
     import pandas as pd
     log = get_logger()
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
     de = load_de_results(smoke=smoke)
     if not de:
         log.error("No Stage 5 DE tables found -- run `--stage de` first.")

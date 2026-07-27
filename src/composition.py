@@ -73,7 +73,7 @@ def exploratory_shift_tests(counts):
 
 def save_composition_figures(proportions, suffix: str = ""):
     """Stacked bar (composition per sample) + grouped bar (per-lineage across
-    samples), to results/figures/."""
+    samples), to cfg.FIG_DIR (results/{full,smoke}/figures/)."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -109,7 +109,7 @@ def run(adata, debug: bool = False, smoke: bool = False):
     figures only -- no new AnnData checkpoint."""
     log = get_logger()
     describe_adata(adata, "composition:input")
-    sfx = "_smoke" if smoke else ""
+    sfx = ""  # smoke/full split is by directory (results/{smoke,full}/), not filename
 
     counts, proportions, log2fc = composition_tables(adata)
     counts.to_csv(cfg.TABLE_DIR / f"04_composition_counts{sfx}.csv")
