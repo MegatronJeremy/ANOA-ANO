@@ -347,21 +347,39 @@ def _is_interactive() -> bool:
 
 def _print_status_table():
     from rich.table import Table
+    from rich import box
+
     console = get_console()
-    table = Table(title="Pipeline stages", show_header=True, header_style="bold cyan")
-    table.add_column("stage")
-    table.add_column("description")
-    table.add_column("input ready?")
-    table.add_column("full run done?")
-    table.add_column("smoke run done?")
+    table = Table(
+        title="[bold]Pipeline stages[/bold]",
+        box=box.ROUNDED,
+        show_lines=True,                 # horizontal rule between rows
+        header_style="bold cyan",
+        border_style="grey37",
+        padding=(0, 1),
+        caption="[dim]✓ present   —  not run yet   ·   \"Input\" = what the stage reads[/dim]",
+    )
+    table.add_column("Stage", style="bold cyan", no_wrap=True)
+    table.add_column("What it does")
+    table.add_column("Input", justify="center", no_wrap=True)
+    table.add_column("Full", justify="center", no_wrap=True)
+    table.add_column("Smoke", justify="center", no_wrap=True)
+
+    done = "[green]✓[/green]"
+    todo = "[grey37]—[/grey37]"
     for spec in STAGE_REGISTRY.values():
         st = stage_status(spec)
+        if st["input_ready"]:
+            input_cell = "[green]✓ ready[/green]"
+        else:
+            need = st["input_desc"].replace(".h5ad", "")
+            input_cell = f"[yellow]✗[/yellow] [dim]{need}[/dim]"
         table.add_row(
             spec.label,
-            spec.description,
-            f"[green]yes[/green] ({st['input_desc']})" if st["input_ready"] else f"[red]no[/red] ({st['input_desc']})",
-            "[green]yes[/green]" if st["full_done"] else "[yellow]no[/yellow]",
-            "[green]yes[/green]" if st["smoke_done"] else "[yellow]no[/yellow]",
+            f"[dim]{spec.description}[/dim]",
+            input_cell,
+            done if st["full_done"] else todo,
+            done if st["smoke_done"] else todo,
         )
     console.print(table)
 
@@ -388,13 +406,18 @@ def run_menu():
             questionary.Choice(title=spec.label, value=spec.key)
             for spec in STAGE_REGISTRY.values()
         ]
-        choices.append(questionary.Choice(title="Run ALL stages in order", value="__all__"))
+        choices.append(questionary.Separator())
+        choices.append(questionary.Choice(title="▶  Run ALL stages in order", value="__all__"))
         # NOTE: questionary.Choice coerces value=None to the *title* string, so a
         # None sentinel comes back as "Quit" and KeyErrors STAGE_REGISTRY below --
         # use an explicit non-None sentinel instead.
-        choices.append(questionary.Choice(title="Quit", value="__quit__"))
+        choices.append(questionary.Choice(title="✗  Quit", value="__quit__"))
 
-        selected = questionary.select("Select a stage to run:", choices=choices).ask()
+        selected = questionary.select(
+            "Select a stage to run:",
+            choices=choices,
+            instruction="(↑/↓ then Enter)",
+        ).ask()
         if selected is None or selected == "__quit__":   # None = Esc/Ctrl+C
             console.print("[bold]Bye.[/bold]")
             return
