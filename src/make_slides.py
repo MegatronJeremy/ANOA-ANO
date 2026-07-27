@@ -129,27 +129,25 @@ def build():
                  "nanoparticles vs control  -  Genomics Informatics, ETF",
                  notes=(
                      "Hi, my name is Vuk Djordjevic. I'm a master's student at the School of "
-                     "Electrical Engineering in Belgrade, and this is my project for the Genome "
-                     "Informatics course, 2026. The project is a single-cell analysis of how human "
-                     "immune cells respond to nanoplastic particles of different sizes. Nanoplastics "
-                     "are tiny plastic particles, and they've now been found in human blood, in "
-                     "direct contact with our immune cells. The question I looked at is whether "
-                     "particle size matters: do small and large nanoplastics cause different immune "
-                     "responses, and does a mixture of both do something neither size does on its "
-                     "own? To answer this I used single-cell RNA sequencing, which lets me read "
-                     "which genes are active in each individual cell."))
+                     "Electrical Engineering in Belgrade, and this is my project for Genome "
+                     "Informatics, 2026: a single-cell analysis of how human immune cells respond "
+                     "to nanoplastic particles of different sizes. Nanoplastics are tiny plastic "
+                     "particles, now found in human blood in direct contact with our immune cells. "
+                     "My question is whether size matters: do small and large nanoplastics cause "
+                     "different responses, and does a mixture of both do something neither size does "
+                     "alone? To answer it I used single-cell RNA sequencing, which reads which genes "
+                     "are active in each individual cell."))
     _bullets_slide(prs, "Question & dataset", [
         "Do small vs large nanoplastics provoke different immune responses?",
         "Does the 40+200 nm mixture do something neither size does alone?",
         "4 samples, one donor: PSNP_40nm, PSNP_200nm, PSNP_mixture, control",
         "~34,000 PBMCs, AnnData/.h5ad (Zenodo 10.5281/zenodo.15866724)",
     ], notes=(
-        "The data is four samples from a single donor. Peripheral blood immune cells were exposed "
-        "to 40-nanometre particles, to 200-nanometre particles, to a mixture of both, and one "
-        "sample was left unexposed as a control. That's about 34,000 cells in total. One thing I "
-        "want to be upfront about: there is only one donor and one sample per condition, so there "
-        "are no biological replicates. That limitation shaped how I did the statistics, and I flag "
-        "it throughout the project."))
+        "The data is four samples from a single donor: peripheral blood immune cells exposed to "
+        "40-nanometre particles, to 200-nanometre particles, to a mixture of both, and one "
+        "unexposed control. About 34,000 cells in total. One thing to be upfront about: one donor, "
+        "one sample per condition, so no biological replicates. That shaped how I did the "
+        "statistics, and I flag it throughout."))
     _bullets_slide(prs, "Pipeline (6 stages, one reproducible driver)", [
         "1. QC & preprocessing  -  thresholds justified on real percentiles",
         "2. Integration  -  Harmony batch correction, UMAP, Leiden",
@@ -168,16 +166,14 @@ def build():
                   "Violins of the 3 QC metrics after filtering. Thresholds justified on the real distribution "
                   "(max_genes ~p99, max_mito between p95-p99).",
                   notes=(
-                      "The first stage is quality control, where I remove low-quality cells before trusting "
-                      "anything. These three plots are violins, which are just histograms turned on their side "
-                      "and mirrored, so they're fatter where more cells sit. Along the bottom of each are my "
-                      "four samples. The left plot is how many genes each cell expressed, the middle is the "
-                      "total reads per cell, and the right is the percent of reads coming from mitochondria, "
-                      "which is a sign of a dying cell. This is after cleaning, and you can see the shapes look "
-                      "healthy and similar across all four samples, so no sample is junk. Instead of guessing "
-                      "the cutoffs I set them from the real distribution: I drop cells with too many genes, "
-                      "which are usually two cells stuck together, and cells with too much mitochondria, which "
-                      "are dying."))
+                      "The first stage is quality control: removing low-quality cells before trusting "
+                      "anything. These three plots are violins, basically histograms on their side, fatter "
+                      "where more cells sit; along the bottom are my four samples. Left is how many genes each "
+                      "cell expressed, middle is total reads per cell, right is the percent of mitochondrial "
+                      "reads, a sign of a dying cell. This is after cleaning, and the shapes look healthy and "
+                      "similar across all samples. I set the cutoffs from the real distribution, not by "
+                      "guessing: drop cells with too many genes, usually two stuck together, and cells with too "
+                      "much mitochondria, which are dying."))
     _figure_slide(prs, "QC & preprocessing (2/2): counts vs %mito", ["01_qc_scatter_counts_mito.png"],
                   "total_counts vs %mito (pre-filter); threshold lines drawn. Drops likely doublets and dying cells.",
                   notes=(
@@ -190,61 +186,49 @@ def build():
     _figure_slide(prs, "Integration removes the batch effect", ["02_umap_pre_harmony_by_sample.png", "02_umap_by_sample.png"],
                   "Before (left) vs after Harmony (right), coloured by sample: samples mix after correction.",
                   notes=(
-                      "The second stage is integration. Both of these pictures are a UMAP. The way to picture "
-                      "it: each cell has thousands of genes, and UMAP squashes all of that down to a single dot "
-                      "on a map, so that cells with similar gene activity land close together. The axes are "
-                      "just map coordinates with no units; only closeness means anything. Each dot is a cell, "
-                      "coloured by which sample it came from. What I want here is for the colours to be well "
-                      "mixed. If the cells clumped up by colour, it would mean the sample a cell came from "
-                      "matters more than its actual biology, which is a technical artefact I'd have to remove. "
-                      "On both panels the colours are already nicely blended, so the samples line up and the "
-                      "cells group by cell type rather than by batch. One honest caveat: because each condition "
-                      "is a single sample, the batch and the treatment effects are tied together, so for the "
-                      "gene-level results later I work on the uncorrected data, where this can't bias "
-                      "anything."))
+                      "The second stage is integration. Both pictures are a UMAP: each cell has thousands of "
+                      "genes, and UMAP squashes that down to one dot on a map, so cells with similar gene "
+                      "activity land close together. The axes are just map coordinates; only closeness matters. "
+                      "Each dot is a cell, coloured by sample. I want the colours well mixed: if cells clumped "
+                      "by colour, the sample would matter more than the biology, a technical artefact. Here "
+                      "they're nicely blended, so cells group by cell type, not batch. One honest caveat: with "
+                      "a single sample per condition, batch and treatment are tied together, so for the "
+                      "gene-level results later I use the uncorrected data, where this can't bias anything."))
     _figure_slide(prs, "Cell-type annotation", ["03_umap_lineage.png", "03_marker_dotplot.png"],
                   "celltypist lineages; agreement with Azimuth 92.7% and CoDi 93.1% (independent references).",
                   notes=(
-                      "The third stage is labelling the cell types. On the left is the same cell-map, now "
-                      "coloured by what kind of immune cell each dot is. You can literally see the "
-                      "neighbourhoods: the T cells are the big purple mass on the right, the monocytes are the "
-                      "orange island top-left, the B cells are blue at the bottom, and the NK cells are green. "
-                      "The fact that they form clean separate islands means the cell types are real and "
-                      "distinct. On the right is a dot-plot that proves the labels. The rows are the cell "
-                      "clusters and the columns are famous marker genes, like CD3D for T cells or CD14 for "
-                      "monocytes. A big dark dot means that gene is strongly switched on in that cluster, and "
-                      "you can see the dark dots line up on the diagonal, so each cluster lights up its own "
-                      "known marker. I assigned the types with a tool called celltypist, then cross-checked "
-                      "against two independent methods already in the data, and my labels agreed with both at "
-                      "about 93 percent."))
+                      "The third stage is labelling the cell types. On the left, the same cell-map coloured by "
+                      "cell type: T cells the big purple mass on the right, monocytes the orange island "
+                      "top-left, B cells blue at the bottom, NK cells green. Clean separate islands mean the "
+                      "types are real. On the right, a dot-plot that proves the labels: rows are clusters, "
+                      "columns are marker genes like CD3D for T cells or CD14 for monocytes. A big dark dot "
+                      "means that gene is strongly on in that cluster, and the dark dots line up on the "
+                      "diagonal, so each cluster lights up its own marker. I labelled with a tool called "
+                      "celltypist and cross-checked against two independent methods; they agreed at about 93 "
+                      "percent."))
     _figure_slide(prs, "Composition shifts vs control", ["04_composition_stacked.png", "04_composition_grouped.png"],
                   "Cell-type proportions per sample; PSNP_200nm shows the largest compositional shift.",
                   notes=(
                       "The fourth stage asks whether exposure changed how many of each cell type there are. "
-                      "The bars show what fraction of a sample is each cell type, and the four coloured bars in "
-                      "each group are the four samples. The T cells dominate every sample, those are the tall "
-                      "bars on the right at around 80 percent, which is normal for blood. The thing to notice "
-                      "is the Monocyte group: the green 200-nanometre bar is noticeably taller than the others, "
-                      "roughly two and a half times the control's monocyte fraction, while everything else "
-                      "barely moves. So 200-nanometre exposure specifically bumps up the monocytes. Since there "
-                      "are no replicates, I report this as a descriptive shift and treat any statistical test "
-                      "as exploratory."))
+                      "The bars show what fraction of a sample is each cell type, and the four bars per group "
+                      "are the four samples. T cells dominate every sample, the tall bars on the right at "
+                      "around 80 percent, which is normal for blood. The thing to notice is the Monocyte "
+                      "group: the green 200-nanometre bar is noticeably taller, roughly two and a half times "
+                      "the control's monocyte fraction, while everything else barely moves. So 200 nanometres "
+                      "specifically bumps up the monocytes. With no replicates, I report this as a descriptive "
+                      "shift and treat any test as exploratory."))
     _figure_slide(prs, "Differential expression: dose-response", ["07_dose_response.png", "06_size_categories.png"],
                   "Monocytes respond most; 200 nm drives more unique genes than 40 nm; mixture-emergent in monocytes.",
                   notes=(
-                      "The fifth stage asks which genes actually change on exposure, within each cell type. "
-                      "There are two bar charts, and in both the height of a bar is the number of genes that "
-                      "significantly changed, so taller means a bigger reaction. The left chart groups by "
-                      "condition and colours by cell type. The story jumps right out: the orange Monocyte bars "
-                      "tower over everything, because monocytes are the cells that eat and clear foreign "
-                      "particles so they react the hardest, and the 200-nanometre bar is taller than the "
-                      "40-nanometre one, meaning bigger particles cause a bigger response. The right chart is "
-                      "the sixth stage, and it zooms into where those genes overlap. For each cell type there "
-                      "are four bars: genes that react only to 40 nanometres, only to 200, to both, and the "
-                      "key one in red, genes that fire only in the mixture and in neither size on its own. Look "
-                      "at the Monocyte group: that red bar is about 180 genes, a whole response that only "
-                      "appears when both sizes are combined. So the mixture does something the individual sizes "
-                      "do not."))
+                      "The fifth stage asks which genes actually change on exposure, within each cell type. In "
+                      "both bar charts, bar height is the number of genes that significantly changed. The left "
+                      "chart groups by condition, coloured by cell type: the orange Monocyte bars tower over "
+                      "everything, because monocytes eat and clear foreign particles, and the 200-nanometre bar "
+                      "beats the 40-nanometre one, so bigger particles, bigger response. The right chart is the "
+                      "sixth stage, showing where those genes overlap. Four bars per cell type: genes reacting "
+                      "only to 40, only to 200, to both, and the key one in red, genes that fire only in the "
+                      "mixture and in neither size alone. In monocytes that red bar is about 180 genes, a whole "
+                      "response that only appears when both sizes are combined."))
     _bullets_slide(prs, "Key biological finding", [
         "Monocytes show the strongest transcriptional response to nanoplastic.",
         "200 nm particles drive MORE lineage-unique genes than 40 nm.",
@@ -269,16 +253,15 @@ def build():
         "  an inflammatory activation threshold - an emergent, non-additive effect.",
         "Real exposure is always to mixtures -> single-size studies may under-estimate risk.",
     ], notes=(
-        "So what is that new thing the mixture does? I ran pathway enrichment on those 180 "
-        "mixture-only monocyte genes, and the result points clearly at inflammation. The top "
-        "pathways, with very strong statistical support, are interleukin, cytokine, and TNF "
-        "signalling, along with the response to lipopolysaccharide. That last one is the program a "
-        "monocyte runs during a bacterial infection, except here it's set off by plastic. Two of "
-        "the strongest genes that go up in the mixture are RIPK2 and TRAF1, which are core "
-        "innate-immune and TNF-signalling genes. My reading is that 40 and 200 nanometres each "
-        "cause small changes that stay below a threshold, but together they push the monocyte past "
-        "that threshold into an inflammatory state. And since real-world exposure is always to a "
-        "mix of particle sizes, testing single sizes alone could underestimate the risk."))
+        "So what is that new thing? I ran pathway enrichment on those 180 mixture-only monocyte "
+        "genes, and it points clearly at inflammation. The top pathways, with strong statistical "
+        "support, are interleukin, cytokine, and TNF signalling, plus the response to "
+        "lipopolysaccharide. That last one is the program a monocyte runs during a bacterial "
+        "infection, except here it's set off by plastic. Two of the strongest genes going up are "
+        "RIPK2 and TRAF1, core innate-immune and TNF genes. My reading: 40 and 200 nanometres each "
+        "cause small, sub-threshold changes, but together they push the monocyte over the edge into "
+        "an inflammatory state. And since real exposure is always to a mix of sizes, testing single "
+        "sizes alone could underestimate the risk."))
     # Bonus split across two slides -- the additivity plot (5:1) is far too wide
     # to sit beside the module-scores heatmap on one slide.
     _bullets_slide(prs, "Additional analyses (5 implemented)", [
@@ -297,42 +280,37 @@ def build():
     _figure_slide(prs, "Additional analyses: stress/inflammation module scores", ["07_module_scores.png"],
                   "Analysis 1 of 5. Per-sample mean module scores for stress and inflammation gene programs.",
                   notes=(
-                      "The first additional analysis is module scoring. This is a colour grid where each row "
-                      "is a sample and each column is a biological program, which is just a named group of "
-                      "genes: oxidative stress, NF-kB inflammation, interferon, and heat shock. Red means that "
-                      "program is turned up in that sample, and white or blue means it isn't. The whole left "
-                      "column, oxidative stress, goes deep red in all three exposed samples but not in the "
-                      "control, so the plastic reliably stresses the cells. And the inflammation column turns "
-                      "pink specifically under 200 nanometres. So the size effect I keep pointing at shows up "
-                      "here too, in independent gene programs."))
+                      "The first additional analysis is module scoring: a colour grid where each row is a "
+                      "sample and each column is a biological program, a named group of genes: oxidative "
+                      "stress, NF-kB inflammation, interferon, heat shock. Red means the program is turned up. "
+                      "The whole oxidative-stress column goes deep red in all three exposed samples but not the "
+                      "control, so plastic reliably stresses the cells, and the inflammation column turns pink "
+                      "specifically under 200 nanometres. So the size effect shows up here too, in independent "
+                      "gene programs."))
     _figure_slide(prs, "Additional analyses: mixture additivity", ["07_mixture_additivity.png"],
                   "Analysis 2 of 5. Observed mixture response vs the 40+200 nm additive expectation, per lineage.",
                   notes=(
                       "The second analysis is a direct test of whether the mixture is just 40 plus 200 added "
-                      "together. There's one scatter per cell type, and each dot is a gene. Left-to-right is "
-                      "what I'd predict if the mixture were simply the two sizes summed, and bottom-to-top is "
-                      "what the mixture actually did. The red diagonal line is where the prediction would be "
-                      "perfect. If every gene sat on that line, the mixture would be boringly additive. But "
-                      "look at the Monocyte panel: there are clear blobs of genes sitting off the line. Those "
-                      "are genes the mixture switched on or off that you'd never predict from the single sizes, "
-                      "and that off-the-line behaviour is exactly the emergent, non-additive effect."))
+                      "together. One scatter per cell type, each dot a gene: left-to-right is what I'd predict "
+                      "if the mixture were the two sizes summed, bottom-to-top is what it actually did, and the "
+                      "red diagonal is where the prediction would be perfect. If every gene sat on that line, "
+                      "the mixture would be boringly additive. But in the Monocyte panel there are clear blobs "
+                      "of genes off the line, genes the mixture switched on or off that you'd never predict "
+                      "from the single sizes. That off-the-line behaviour is exactly the emergent, non-additive "
+                      "effect."))
     _figure_slide(prs, "Additional analyses: robustness & communication",
                   ["07_clustering_robustness.png", "07_ligand_receptor.png"],
                   "Analyses 3 & 4 of 5. Left: clustering robustness (ARI across Leiden resolutions). "
                   "Right: ligand-receptor communication shift on exposure. (Analysis 5, dose-response, is on the DE slide.)",
                   notes=(
-                      "These are the third and fourth analyses. The plot on the left is a sanity check on my "
-                      "clustering. The bottom axis is how finely I chose to cut the cells into groups. The blue "
-                      "line just rises because you naturally get more clusters if you cut finer. The one that "
-                      "matters is the green dashed line, which is how much the grouping still agrees with my "
-                      "default setting, where 1.0 would be identical. It stays high near the setting I chose, "
-                      "so my cell groups aren't a fluke of one knob. The plot on the right is cell-to-cell "
-                      "messaging. Each row is a signalling pair, a messenger and its receptor, and a bar goes "
+                      "The third and fourth analyses. The left plot is a sanity check on my clustering: the "
+                      "green dashed line is how much the grouping still agrees with my default setting, where "
+                      "1.0 is identical. It stays high, so my cell groups aren't a fluke of one setting. The "
+                      "right plot is cell-to-cell messaging: each row is a signalling pair, and a bar goes "
                       "right if that message got louder after exposure. The standout is IL1B, a classic "
-                      "inflammation alarm signal, shooting far right in all the exposed samples and furthest "
-                      "under 200 nanometres. So the cells aren't just changing internally, they're shouting "
-                      "inflammation at each other. The fifth analysis, dose-response, I already showed on the "
-                      "differential-expression slide earlier."))
+                      "inflammation alarm, shooting far right in all exposed samples and furthest under 200 "
+                      "nanometres, so the cells are shouting inflammation at each other. The fifth analysis, "
+                      "dose-response, I already showed on the earlier DE slide."))
     _bullets_slide(prs, "Limitations & reproducibility", [
         "One donor, one sample per condition -> NO biological replicates.",
         "DE is cell-level Wilcoxon (not pseudobulk); p-values exploratory, pseudoreplication caveat.",
