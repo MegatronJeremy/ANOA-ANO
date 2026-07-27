@@ -17,6 +17,11 @@ from . import config as cfg
 SLIDES_DIR = cfg.PROJECT_ROOT / "results" / "slides"
 SLIDES_DIR.mkdir(parents=True, exist_ok=True)
 
+# 16:9 widescreen (the modern default). Layout math below derives from these
+# so figure placement stays correct if the dimensions ever change.
+SLIDE_W, SLIDE_H = 13.333, 7.5
+MARGIN = 0.4   # left/right page margin (inches)
+
 # The deck is a deliverable built from the FULL run's figures. Resolve to the
 # full-run location explicitly (independent of any smoke run's cfg state).
 FIG = cfg.RESULTS_DIR / "full" / "figures"
@@ -60,30 +65,33 @@ def _place_fit(slide, path, box_left, box_top, box_w, box_h):
 
 def _figure_slide(prs, title, fig_names, caption=""):
     """One slide, title + up to two figures side by side (skips any missing).
-    Slide is 10 x 7.5 in; figures live below the title and above the caption."""
+    Positions derive from SLIDE_W / MARGIN so the layout tracks the slide size."""
     paths = [FIG / f for f in fig_names if (FIG / f).exists()]
     s = prs.slides.add_slide(prs.slide_layouts[5])
     s.shapes.title.text = title
+    usable_w = SLIDE_W - 2 * MARGIN
     if not paths:
-        tb = s.shapes.add_textbox(Inches(1), Inches(2.5), Inches(8), Inches(1)).text_frame
+        tb = s.shapes.add_textbox(Inches(MARGIN), Inches(2.5), Inches(usable_w), Inches(1)).text_frame
         tb.text = "(figure not generated yet -- run the pipeline)"
         return
     top, box_h = 1.5, 5.0            # vertical band for figures (below title, above caption)
     if len(paths) == 1:
-        _place_fit(s, paths[0], 0.5, top, 9.0, box_h)      # one figure, full width
+        _place_fit(s, paths[0], MARGIN, top, usable_w, box_h)   # one figure, full usable width
     else:
-        _place_fit(s, paths[0], 0.3, top, 4.6, box_h)      # left half
-        _place_fit(s, paths[1], 5.1, top, 4.6, box_h)      # right half
+        gap = 0.3
+        half = (usable_w - gap) / 2
+        _place_fit(s, paths[0], MARGIN, top, half, box_h)              # left half
+        _place_fit(s, paths[1], MARGIN + half + gap, top, half, box_h) # right half
     if caption:
-        tb = s.shapes.add_textbox(Inches(0.5), Inches(6.9), Inches(9), Inches(0.5)).text_frame
+        tb = s.shapes.add_textbox(Inches(MARGIN), Inches(6.9), Inches(usable_w), Inches(0.5)).text_frame
         tb.text = caption
         tb.paragraphs[0].font.size = Pt(12)
 
 
 def build():
     prs = Presentation()
-    prs.slide_width = Inches(10)
-    prs.slide_height = Inches(7.5)
+    prs.slide_width = Inches(SLIDE_W)
+    prs.slide_height = Inches(SLIDE_H)
 
     _title_slide(prs, "Single-Cell Immune Response to Nanoplastic Particles",
                  "scRNA-seq of human PBMCs exposed to 40 nm / 200 nm / mixed polystyrene "
