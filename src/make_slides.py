@@ -28,12 +28,17 @@ FIG = cfg.RESULTS_DIR / "full" / "figures"
 
 
 def _stretch(ph):
-    """python-pptx's built-in layouts size placeholders for a 4:3 slide (~9in
-    wide). On our 16:9 slide that leaves them hugging the left with a dead band
-    on the right, which reads as 'not centred'. Re-span each placeholder across
-    the usable width so titles/bullets fill the slide."""
+    """Widen a placeholder to the usable width WITHOUT disturbing its vertical
+    position. python-pptx's built-in layouts size placeholders for a 4:3 slide
+    (~9in wide); on our 16:9 slide that leaves text hugging the left with a dead
+    band on the right. Capture the inherited top/height first: setting left/width
+    materializes the shape's xfrm, and any position attribute left unset then
+    defaults to 0 -- which previously yanked every text box to top=0, height=0."""
+    top, height = ph.top, ph.height        # inherited from the layout; read before mutating
     ph.left = Inches(MARGIN)
     ph.width = Inches(SLIDE_W - 2 * MARGIN)
+    ph.top = top
+    ph.height = height
 
 
 def _title_slide(prs, title, subtitle):
