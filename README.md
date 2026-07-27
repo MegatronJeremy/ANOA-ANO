@@ -34,6 +34,10 @@ environment file.
 .\run.ps1 check                   # environment doctor: verify everything is ready
 ```
 
+> Prefer plain `cmd.exe` or double-clicking? `setup.bat` and `run.bat` are shims that forward
+> to the same scripts (e.g. `run.bat check`, `run.bat all`). `run` also creates the `.venv` via
+> setup automatically the first time, if it's missing.
+
 **Manual / Linux / Mac:**
 
 ```bash
@@ -48,8 +52,8 @@ See `src/config.py` for the exact filename → sample mapping.
 ## Running the pipeline
 
 Everything goes through `run_pipeline.py`. Each stage reads the previous stage's checkpoint
-from `data/processed/` and writes its own. On Windows, `run.ps1` is a thin wrapper around it
-(new stages appear automatically as they are registered):
+from `data/processed/` and writes its own. On Windows, `run.ps1` (or `run.bat`) is a thin wrapper
+around it (new stages appear automatically as they are registered):
 
 ```powershell
 .\run.ps1                          # interactive menu

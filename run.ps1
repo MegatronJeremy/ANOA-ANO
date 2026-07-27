@@ -10,6 +10,10 @@
 #   .\run.ps1 data                 # download the raw dataset from Zenodo into data/raw/
 #   .\run.ps1 test                 # pytest
 #   .\run.ps1 menu                 # force the interactive menu
+#
+# run.bat / setup.bat are thin cmd.exe shims around these scripts (double-click
+# or plain cmd), forwarding all arguments. If .venv is missing, run creates it
+# via setup automatically on first use.
 param(
     [string]$Command = "menu",
     [switch]$Smoke,
@@ -18,11 +22,17 @@ param(
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
-# Prefer the venv interpreter; fall back to whatever `python` resolves to.
+# Prefer the venv interpreter. If it doesn't exist yet, run setup once to create
+# it (first-run convenience) instead of failing or silently falling back to a
+# system Python that lacks the dependencies.
 $py = Join-Path $root ".venv\Scripts\python.exe"
 if (-not (Test-Path $py)) {
-    Write-Host ".venv not found -- run .\setup.ps1 first (falling back to system python)." -ForegroundColor Yellow
-    $py = "python"
+    Write-Host ".venv not found -- running setup first (one-time)..." -ForegroundColor Yellow
+    & (Join-Path $root "setup.ps1")
+    if (-not (Test-Path $py)) {
+        Write-Host "Setup did not create .venv -- see the output above." -ForegroundColor Red
+        exit 1
+    }
 }
 
 # Ordered list of registered stages. Keep in sync with STAGE_REGISTRY as
