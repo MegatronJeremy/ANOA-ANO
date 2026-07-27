@@ -26,5 +26,9 @@ env/
 # MS Office lock/temp files (e.g. ~$GI_nanoplastic.pptx while the deck is open)
 ~$*
 
+# machine-specific corporate CA bundle (exported from the Windows cert store so
+# pip can install behind an SSL-inspecting proxy) -- never commit local certs
+corp_ca_bundle.pem
+
 # old notebook-based pipeline, kept locally as reference only (not a repo deliverable)
 legacy/
