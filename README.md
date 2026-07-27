@@ -139,7 +139,7 @@ the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`,
   mixture additivity, clustering robustness, ligand-receptor shift, dose-response.
 - [x] **PowerPoint slides** (10 pts) — `results/slides/GI_nanoplastic.pptx`, rebuilt from figures
   via `python -m src.make_slides` (`.\run.ps1 slides`).
-- [x] **Video presentation** (5–10 min, 20 pts) — **▶ [Watch on YouTube](PASTE_YOUTUBE_LINK_HERE)**.
+- [x] **Video presentation** (5–10 min, 20 pts) — **▶ [Watch on YouTube](https://youtu.be/akj8iNdkRxw)**.
   Narration script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md).
 
 ### Key result
