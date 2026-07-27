@@ -39,8 +39,28 @@ def _bullets_slide(prs, title, bullets):
         p.font.size = Pt(18)
 
 
+def _place_fit(slide, path, box_left, box_top, box_w, box_h):
+    """Add a picture scaled to FIT inside (box_w x box_h) without distortion or
+    overflow -- letterbox by whichever dimension binds, then centre it in the box.
+    Sizing by height alone (the old behaviour) let wide figures (violin strips
+    are 3.75:1, additivity 5:1) blow past the slide edge and overlap."""
+    from PIL import Image
+    px_w, px_h = Image.open(str(path)).size
+    aspect = px_w / px_h            # width / height of the actual image
+    box_aspect = box_w / box_h
+    if aspect >= box_aspect:
+        w, h = box_w, box_w / aspect   # width-bound (wide image)
+    else:
+        w, h = box_h * aspect, box_h   # height-bound (tall/square image)
+    left = box_left + (box_w - w) / 2  # centre within the box
+    top = box_top + (box_h - h) / 2
+    slide.shapes.add_picture(str(path), Inches(left), Inches(top),
+                             width=Inches(w), height=Inches(h))
+
+
 def _figure_slide(prs, title, fig_names, caption=""):
-    """One slide, title + up to two figures side by side (skips any missing)."""
+    """One slide, title + up to two figures side by side (skips any missing).
+    Slide is 10 x 7.5 in; figures live below the title and above the caption."""
     paths = [FIG / f for f in fig_names if (FIG / f).exists()]
     s = prs.slides.add_slide(prs.slide_layouts[5])
     s.shapes.title.text = title
@@ -48,13 +68,14 @@ def _figure_slide(prs, title, fig_names, caption=""):
         tb = s.shapes.add_textbox(Inches(1), Inches(2.5), Inches(8), Inches(1)).text_frame
         tb.text = "(figure not generated yet -- run the pipeline)"
         return
+    top, box_h = 1.5, 5.0            # vertical band for figures (below title, above caption)
     if len(paths) == 1:
-        s.shapes.add_picture(str(paths[0]), Inches(1.2), Inches(1.5), height=Inches(5.2))
+        _place_fit(s, paths[0], 0.5, top, 9.0, box_h)      # one figure, full width
     else:
-        s.shapes.add_picture(str(paths[0]), Inches(0.3), Inches(1.6), height=Inches(4.6))
-        s.shapes.add_picture(str(paths[1]), Inches(5.1), Inches(1.6), height=Inches(4.6))
+        _place_fit(s, paths[0], 0.3, top, 4.6, box_h)      # left half
+        _place_fit(s, paths[1], 5.1, top, 4.6, box_h)      # right half
     if caption:
-        tb = s.shapes.add_textbox(Inches(0.5), Inches(6.7), Inches(9), Inches(0.6)).text_frame
+        tb = s.shapes.add_textbox(Inches(0.5), Inches(6.9), Inches(9), Inches(0.5)).text_frame
         tb.text = caption
         tb.paragraphs[0].font.size = Pt(12)
 
