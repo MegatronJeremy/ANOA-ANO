@@ -22,6 +22,9 @@ Four samples from one donor:
 Do small vs. large nanoplastics provoke different responses in immune cells, and does the
 mixture do something neither size does alone?
 
+**Data:** 4 single-cell samples from one donor, carboxylated polystyrene nanoparticles (PSNPs),
+from Zenodo [10.5281/zenodo.15866724](https://zenodo.org/records/15866724) (`.h5ad` / AnnData).
+
 ## Setup
 
 No conda on the dev machine — built and verified with a plain venv. `requirements.txt` is the
@@ -47,8 +50,30 @@ python -m venv .venv
 pip install -r requirements.txt   # or: make setup
 ```
 
-Data: the 4 `.h5ad` files (and optional `*_CoDi_KLD.csv` reference files) go in `data/raw/`.
-See `src/config.py` for the exact filename → sample mapping.
+### Get the data (required before running)
+
+The raw data is **not in the repo** (too large; git-ignored). Fetch it from Zenodo
+(record [10.5281/zenodo.15866724](https://zenodo.org/records/15866724)) with one command:
+
+```powershell
+.\run.ps1 data          # Windows  (or: run.bat data)
+```
+```bash
+python -m src.download_data     # any platform; ~832 MB of .h5ad + ~2.4 MB CoDi CSVs
+```
+
+This downloads the 4 `.h5ad` matrices (40 nm / 200 nm / mixture / control) and the
+`*_CoDi_KLD.csv` annotation references into `data/raw/`. `.\run.ps1 check` then confirms
+everything is present. See `src/config.py` for the exact filename → sample mapping.
+
+### Reproduce everything (the grading path)
+
+```powershell
+.\setup.ps1        # 1. build the environment (venv + deps)
+.\run.ps1 data     # 2. download the dataset from Zenodo
+.\run.ps1 all      # 3. run all 6 stages on the full data (~15-20 min)
+.\run.ps1 slides   # 4. (re)build the PowerPoint deck from the figures
+```
 
 ## Running the pipeline
 
@@ -114,7 +139,8 @@ the menu, or `--all`). Every stage has offline intent tests (`python -m pytest`,
   mixture additivity, clustering robustness, ligand-receptor shift, dose-response.
 - [x] **PowerPoint slides** (10 pts) — `results/slides/GI_nanoplastic.pptx`, rebuilt from figures
   via `python -m src.make_slides` (`.\run.ps1 slides`).
-- [x] **Video presentation** (20 pts) — narration script in `docs/VIDEO_SCRIPT.md` (recording is manual).
+- [x] **Video presentation** (5–10 min, 20 pts) — **▶ [Watch on YouTube](PASTE_YOUTUBE_LINK_HERE)**.
+  Narration script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md).
 
 ### Key result
 
