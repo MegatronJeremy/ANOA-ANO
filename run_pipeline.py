@@ -319,7 +319,7 @@ def run_doctor() -> bool:
 
     # Key libraries
     libs = ["scanpy", "anndata", "harmonypy", "leidenalg", "celltypist",
-            "gseapy", "skmisc", "rich", "plotext", "questionary", "pytest"]
+            "gseapy", "skmisc", "rich", "plotext", "textual", "pytest"]
     lib_tbl = Table(title="Key libraries", header_style="bold cyan")
     lib_tbl.add_column("library"); lib_tbl.add_column("import")
     import importlib.util
@@ -345,134 +345,49 @@ def _is_interactive() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
-def _print_status_table():
-    from rich.table import Table
-    from rich import box
-
-    console = get_console()
-    table = Table(
-        title="[bold]Pipeline stages[/bold]",
-        box=box.ROUNDED,
-        show_lines=True,                 # horizontal rule between rows
-        header_style="bold cyan",
-        border_style="grey37",
-        padding=(0, 1),
-        caption="[dim]✓ present   —  not run yet   ·   \"Input\" = what the stage reads[/dim]",
-    )
-    table.add_column("Stage", style="bold cyan", no_wrap=True)
-    table.add_column("What it does")
-    table.add_column("Input", justify="center", no_wrap=True)
-    table.add_column("Full", justify="center", no_wrap=True)
-    table.add_column("Smoke", justify="center", no_wrap=True)
-
-    done = "[green]✓[/green]"
-    todo = "[grey37]—[/grey37]"
-    for spec in STAGE_REGISTRY.values():
-        st = stage_status(spec)
-        if st["input_ready"]:
-            input_cell = "[green]✓ ready[/green]"
-        else:
-            need = st["input_desc"].replace(".h5ad", "")
-            input_cell = f"[yellow]✗[/yellow] [dim]{need}[/dim]"
-        table.add_row(
-            spec.label,
-            f"[dim]{spec.description}[/dim]",
-            input_cell,
-            done if st["full_done"] else todo,
-            done if st["smoke_done"] else todo,
-        )
-    console.print(table)
-
-
 def run_menu():
     """
-    Interactive launcher: pick a stage, toggle smoke-test/debug/subsample,
-    run it through the exact same run_stage()/run_fn used by the headless
-    CLI, then loop back to the menu. Never reached for non-TTY invocations.
+    Interactive launcher: a NERV / MAGI-themed Textual TUI (see src/tui.py).
+    Convenience layer only -- it calls the exact same run_stage()/STAGE_REGISTRY
+    the headless CLI uses. Never reached for non-TTY invocations.
     """
-    import questionary
+    from src.tui import PipelineTUI
 
-    console = get_console()
-    log = get_logger()
-
-    while True:
-        # Clear between renders so the table + prompts don't stack/scroll; the
-        # status table above is the single place descriptions live, so the
-        # choices themselves stay short (just the stage label).
-        console.clear()
-        _print_status_table()
-
-        choices = [
-            questionary.Choice(title=spec.label, value=spec.key)
-            for spec in STAGE_REGISTRY.values()
-        ]
-        choices.append(questionary.Separator())
-        choices.append(questionary.Choice(title="▶  Run ALL stages in order", value="__all__"))
-        # NOTE: questionary.Choice coerces value=None to the *title* string, so a
-        # None sentinel comes back as "Quit" and KeyErrors STAGE_REGISTRY below --
-        # use an explicit non-None sentinel instead.
-        choices.append(questionary.Choice(title="✗  Quit", value="__quit__"))
-
-        selected = questionary.select(
-            "Select a stage to run:",
-            choices=choices,
-            instruction="(↑/↓ then Enter)",
-        ).ask()
-        if selected is None or selected == "__quit__":   # None = Esc/Ctrl+C
-            console.print("[bold]Bye.[/bold]")
-            return
-
-        smoke_test = questionary.confirm(
-            "Run as a smoke test (small random subsample)?", default=False
-        ).ask()
-        if smoke_test is None:  # Ctrl+C
-            continue
-
-        subsample = None
-        if smoke_test:
-            raw = questionary.text(
-                f"Cells per sample (default {cfg.SMOKE_TEST_CELLS_PER_SAMPLE}):",
-                default=str(cfg.SMOKE_TEST_CELLS_PER_SAMPLE),
-            ).ask()
-            if raw is None:
-                continue
-            n = int(raw) if raw.strip() else cfg.SMOKE_TEST_CELLS_PER_SAMPLE
-            if n != cfg.SMOKE_TEST_CELLS_PER_SAMPLE:
-                # mirrors --subsample N on the CLI: custom size, smoke_test flag itself off
-                smoke_test, subsample = False, n
-
-        debug = questionary.confirm("Enable --debug output?", default=False).ask()
-        if debug is None:
-            continue
-
+    def run_selection(selected, smoke_test, debug, subsample):
+        # Runs while the TUI is suspended, so normal terminal output (rich
+        # banners/spinners, plotext) behaves exactly as under the headless CLI.
         args = argparse.Namespace(smoke_test=smoke_test, debug=debug, subsample=subsample)
-
-        log.handlers.clear()
-        setup_logging(debug=debug)
-        log = get_logger()
+        get_logger().handlers.clear()
+        log = setup_logging(debug=debug)
         set_seeds(cfg.RANDOM_SEED)
 
-        # Starting from raw data (Stage 1 or a full reproduce)? If the raw files
-        # aren't present yet, offer to fetch them from Zenodo before running.
+        # Starting from raw data (Stage 1 or a full reproduce)? Offer to fetch it.
         if selected in ("qc", "__all__"):
             from src import download_data
             missing = download_data.missing_h5ad()
             if missing:
                 size = download_data.human(sum(download_data.FILE_SIZES.get(n, 0) for n in missing))
-                if questionary.confirm(
-                    f"Raw data missing ({len(missing)} file(s), ~{size}). Download from Zenodo now?",
-                    default=True,
-                ).ask():
+                try:
+                    ans = input(
+                        f"Raw data missing ({len(missing)} file(s), ~{size}). "
+                        f"Download from Zenodo now? [Y/n] "
+                    ).strip().lower()
+                except EOFError:
+                    ans = "n"
+                if ans in ("", "y", "yes"):
                     download_data.download_all()
 
         if selected == "__all__":
             for spec in STAGE_REGISTRY.values():
                 if not run_stage(spec, args, log):
+                    log.error(f"Stopped at stage '{spec.key}'.")
                     break
+            else:
+                log.info("All stages completed.")
         else:
             run_stage(STAGE_REGISTRY[selected], args, log)
 
-        questionary.text("Press Enter to return to the menu...").ask()
+    PipelineTUI(STAGE_REGISTRY, stage_status, run_selection).run()
 
 
 # ---------------------------------------------------------------------------
