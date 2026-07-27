@@ -23,6 +23,9 @@ env/
 # run logs
 *.log
 
+# recorded video (the presentation lives on YouTube; the mp4 is a local artifact)
+*.mp4
+
 # MS Office lock/temp files (e.g. ~$GI_nanoplastic.pptx while the deck is open)
 ~$*
 
