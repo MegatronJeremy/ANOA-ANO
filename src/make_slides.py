@@ -152,6 +152,15 @@ def build():
         "  genes significant only in the mixture, in neither single size.",
         "In lymphocytes the mixture is weaker than either size (sub-additive).",
     ])
+    _bullets_slide(prs, "What the mixture does: emergent inflammation", [
+        "The 180 mixture-only monocyte genes are dominated by INFLAMMATION.",
+        "Pathway enrichment (p ~ 1e-21): interleukin, cytokine & TNF signalling,",
+        "  and 'response to lipopolysaccharide' - i.e. a bacterial-attack-like program.",
+        "Top mixture-only genes up: RIPK2, TRAF1, PIK3CB (innate/TNF signalling).",
+        "Interpretation: two sub-threshold exposures together push monocytes over",
+        "  an inflammatory activation threshold - an emergent, non-additive effect.",
+        "Real exposure is always to mixtures -> single-size studies may under-estimate risk.",
+    ])
     # Bonus split across two slides -- the additivity plot (5:1) is far too wide
     # to sit beside the module-scores heatmap on one slide.
     _figure_slide(prs, "Bonus analyses (1/2): stress/inflammation module scores", ["07_module_scores.png"],

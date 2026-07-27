@@ -124,6 +124,20 @@ caveated). Monocytes respond most strongly; 200 nm particles drive more lineage-
 than 40 nm; and the 40 nm + 200 nm **mixture produces an emergent monocyte response** (genes
 significant only in the mixture, in neither single size). See `results/full/tables/06_size_specific_*`.
 
+**Biological interpretation of the emergent response.** The ~180 mixture-only monocyte genes are
+overwhelmingly **inflammatory**. Pathway enrichment on that set (see
+`results/full/tables/05_pathway_enrichment.csv`, `Monocyte` + `PSNP_mixture`) returns, at adjusted
+p ≈ 1e-21: *Signaling by Interleukins*, *cytokine-mediated signaling*, *TNF signaling*,
+*Interleukin-10 signaling*, and *cellular response to lipopolysaccharide* — i.e. the transcriptional
+program of a monocyte mounting an acute, bacterial-infection-like inflammatory response, driven here
+by plastic rather than a pathogen. The most significant mixture-only genes that go **up** include
+**RIPK2** (innate/NOD signaling), **TRAF1** (TNF-signaling adaptor) and **PIK3CB** (PI3K signaling).
+The reading: 40 nm and 200 nm each cause modest, sub-threshold changes, but **together they push
+monocytes over an inflammatory activation threshold** — a genuinely emergent (non-additive) effect,
+consistent with immune "priming". Because real-world exposure is always to *mixtures* of particle
+sizes, single-size toxicology may under-estimate the inflammatory risk. (Caveat as above: one donor,
+exploratory — this is a strong hypothesis, not a proven clinical fact.)
+
 ## Repo layout
 
 ```
