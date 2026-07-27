@@ -1,5 +1,5 @@
 """
-NERV / MAGI-themed Textual TUI for the pipeline menu.
+NERV-styled Textual TUI for the pipeline menu (ETF / Genome Informatics branding).
 
 Convenience layer ONLY -- the canonical, graded entry point stays the headless
 `run_pipeline.py --stage/--all` CLI. This app is pure presentation: it renders
@@ -9,7 +9,7 @@ rich logging / progress output is unchanged. Nothing about the analysis lives
 here.
 
 Theme: Evangelion NERV console -- amber on void black, alert red, terminal
-green for "ready", with a MAGI header and a DNA motif.
+green for "ready", with an ETF / Genome Informatics header and a DNA motif.
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ VOID = "#0A0A0A"
 PANEL = "#1A1206"
 
 _BANNER = (
-    f"[b {AMBER}]N E R V[/]   [{ALERT}]//[/]   [b {AMBER}]MAGI SYSTEM[/]\n"
+    f"[b {AMBER}]ETF[/]   [{ALERT}]//[/]   [b {AMBER}]GENOME INFORMATICS[/]\n"
     f"[dim {AMBER}]scRNA-seq · immune response to nanoplastics · particle-size study[/]\n"
     f"[{GREEN}]⌁[/] [dim]DNA  A–T  G≡C  C≡G  T–A  G≡C  A–T  C≡G[/] [{GREEN}]⌁[/]"
 )
@@ -87,7 +87,7 @@ class PipelineTUI(App):
     Footer {{ background: {PANEL}; color: {AMBER}; }}
     """
 
-    TITLE = "NERV // MAGI"
+    TITLE = "ETF // GENOME INFORMATICS"
     SUB_TITLE = "scRNA-seq nanoplastic pipeline"
 
     BINDINGS = [
@@ -158,7 +158,7 @@ class PipelineTUI(App):
         with self.suspend():
             self.run_selection(selected, smoke, debug, None)
             try:
-                input("\n[ press Enter to return to NERV ] ")
+                input("\n[ press Enter to return to the menu ] ")
             except EOFError:
                 pass
         self._populate()
