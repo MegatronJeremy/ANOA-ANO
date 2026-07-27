@@ -31,7 +31,8 @@ def load_all_samples() -> ad.AnnData:
         path = cfg.RAW_DIR / fname
         if not path.exists():
             raise FileNotFoundError(
-                f"Missing {path}. Run src/download_data.py or check config.SAMPLES."
+                f"Missing {path}. Fetch the raw data with '.\\run.ps1 data' "
+                f"(or 'python -m src.download_data'), or check config.SAMPLES."
             )
         a = sc.read_h5ad(path)
 

@@ -2,7 +2,7 @@
 # Thin wrappers around run_pipeline.py; the venv interpreter is used if present.
 PY := $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
-.PHONY: setup check qc integration all test menu clean-smoke
+.PHONY: setup check data qc integration all test menu clean-smoke
 
 setup:
 	python3 -m venv .venv
@@ -12,6 +12,9 @@ setup:
 
 check:
 	$(PY) run_pipeline.py --check
+
+data:
+	$(PY) -m src.download_data
 
 qc:
 	$(PY) run_pipeline.py --stage qc $(FLAGS)

@@ -56,7 +56,7 @@ foreach ($f in $files) { if (-not (Test-Path (Join-Path $raw $f))) { $missing +=
 if ($missing.Count -gt 0) {
     Write-Host "Missing raw data in data\raw\:" -ForegroundColor Yellow
     $missing | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
-    Write-Host "Download from Zenodo DOI 10.5281/zenodo.15866724 (see legacy\src\download_data.py)." -ForegroundColor Yellow
+    Write-Host "Fetch it with:  .\run.ps1 data   (downloads from Zenodo DOI 10.5281/zenodo.15866724)" -ForegroundColor Yellow
 } else {
     Write-Host "All 4 raw .h5ad files present." -ForegroundColor Green
 }

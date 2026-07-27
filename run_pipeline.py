@@ -389,10 +389,13 @@ def run_menu():
             for spec in STAGE_REGISTRY.values()
         ]
         choices.append(questionary.Choice(title="Run ALL stages in order", value="__all__"))
-        choices.append(questionary.Choice(title="Quit", value=None))
+        # NOTE: questionary.Choice coerces value=None to the *title* string, so a
+        # None sentinel comes back as "Quit" and KeyErrors STAGE_REGISTRY below --
+        # use an explicit non-None sentinel instead.
+        choices.append(questionary.Choice(title="Quit", value="__quit__"))
 
         selected = questionary.select("Select a stage to run:", choices=choices).ask()
-        if selected is None:
+        if selected is None or selected == "__quit__":   # None = Esc/Ctrl+C
             console.print("[bold]Bye.[/bold]")
             return
 
@@ -425,6 +428,19 @@ def run_menu():
         setup_logging(debug=debug)
         log = get_logger()
         set_seeds(cfg.RANDOM_SEED)
+
+        # Starting from raw data (Stage 1 or a full reproduce)? If the raw files
+        # aren't present yet, offer to fetch them from Zenodo before running.
+        if selected in ("qc", "__all__"):
+            from src import download_data
+            missing = download_data.missing_h5ad()
+            if missing:
+                size = download_data.human(sum(download_data.FILE_SIZES.get(n, 0) for n in missing))
+                if questionary.confirm(
+                    f"Raw data missing ({len(missing)} file(s), ~{size}). Download from Zenodo now?",
+                    default=True,
+                ).ask():
+                    download_data.download_all()
 
         if selected == "__all__":
             for spec in STAGE_REGISTRY.values():

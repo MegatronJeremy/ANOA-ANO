@@ -7,6 +7,7 @@
 #   .\run.ps1 qc                   # run a stage
 #   .\run.ps1 qc -Smoke -Debug     # ... on the smoke subsample, verbose
 #   .\run.ps1 all                  # run every registered stage in order
+#   .\run.ps1 data                 # download the raw dataset from Zenodo into data/raw/
 #   .\run.ps1 test                 # pytest
 #   .\run.ps1 menu                 # force the interactive menu
 param(
@@ -41,6 +42,7 @@ switch ($Command.ToLower()) {
     "menu"  { & $py (Join-Path $root "run_pipeline.py") }
     "check" { & $py (Join-Path $root "run_pipeline.py") --check }
     "test"   { & $py -m pytest $root }
+    "data"   { & $py -m src.download_data }
     "slides" { & $py -m src.make_slides }
     "all"    { foreach ($s in $Stages) { Invoke-Stage $s } }
     default {
