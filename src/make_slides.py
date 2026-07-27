@@ -160,60 +160,71 @@ def build():
                   "Violins of the 3 QC metrics after filtering. Thresholds justified on the real distribution "
                   "(max_genes ~p99, max_mito between p95-p99).",
                   notes=(
-                      "Stage 1, quality control -- remove low-quality cells before trusting anything. "
-                      "Three violin plots, one per QC metric: n_genes_by_counts (genes detected per cell), "
-                      "total_counts (total UMIs per cell), and pct_counts_mt (percent mitochondrial reads). "
-                      "The y-axis on each is the value of that metric; the width of the violin is how many "
-                      "cells sit at that value. Cutoffs were set from the real distribution, not guessed: the "
-                      "upper gene cutoff near the 99th percentile removes likely doublets (two cells read as "
-                      "one), the mito cutoff between p95 and p99 removes dying cells."))
+                      "What you're looking at: three 'violin' plots side by side, one per quality check. A "
+                      "violin is just a histogram turned on its side and mirrored -- fatter where more cells "
+                      "sit. Along the bottom of each are my four samples (40 nm, 200 nm, mixture, control). "
+                      "Left panel = how many genes each cell expressed, middle = total reads per cell, right = "
+                      "percent of reads coming from mitochondria (a sign of a dying cell). What to say: this is "
+                      "AFTER cleaning. The shapes look healthy and similar across all four samples -- no sample "
+                      "is junk. I set the cutoffs from the real data, not by guessing: drop cells with too many "
+                      "genes (likely two cells stuck together) or too much mitochondria (dying)."))
     _figure_slide(prs, "QC & preprocessing (2/2): counts vs %mito", ["01_qc_scatter_counts_mito.png"],
                   "total_counts vs %mito (pre-filter); threshold lines drawn. Drops likely doublets and dying cells.",
                   notes=(
-                      "Same QC stage, shown as a scatter. Each dot is one cell. X-axis is total_counts "
-                      "(total reads in the cell), y-axis is pct_counts_mt (percent mitochondrial). The "
-                      "threshold lines are drawn over the actual data -- cells that are high-mito or "
-                      "low-count fall outside them and get dropped. This is the same filtering as the "
-                      "violins, just showing the two metrics against each other."))
+                      "What you're looking at: every dot is one cell. Left-to-right is how many reads the cell "
+                      "has; bottom-to-top is how mitochondrial it is. The red dashed line is my cutoff at 15 "
+                      "percent mito. What to say: almost all cells form a dense cloud hugging the bottom -- "
+                      "low mito, which is what healthy cells look like. The handful of dots floating up above "
+                      "the red line are dying or broken cells, and those get thrown out. This is the same "
+                      "cleaning as the previous slide, just drawn as a cloud so you can see the cutoff."))
     _figure_slide(prs, "Integration removes the batch effect", ["02_umap_pre_harmony_by_sample.png", "02_umap_by_sample.png"],
                   "Before (left) vs after Harmony (right), coloured by sample: samples mix after correction.",
                   notes=(
-                      "Stage 2, integration. Both panels are UMAP plots -- a 2D map where nearby cells have "
-                      "similar expression; axes are UMAP1 and UMAP2 and have no units, only relative position "
-                      "matters. Colour = which sample a cell came from. LEFT (before correction): cells "
-                      "separate by sample -- a technical batch effect, not biology. RIGHT (after Harmony): the "
-                      "colours mix together and cells group by cell type instead. Caveat: because each "
-                      "condition is a single sample, batch and treatment are confounded, so the gene-level "
-                      "results later use the uncorrected data where this doesn't bias anything."))
+                      "What you're looking at: both pictures are a UMAP -- think of it as squashing each cell's "
+                      "thousands of genes down to a single dot on a 2D map, so that cells with similar genes "
+                      "land near each other. The axes are just map coordinates, no units; only closeness "
+                      "matters. Each dot is a cell, coloured by which sample it came from. What to say: I want "
+                      "the colours to be MIXED -- if cells clumped by colour it would mean the sample it came "
+                      "from matters more than its biology, which is a technical artefact. On both sides here "
+                      "the colours are already well blended, so batches line up and cells group by TYPE, not "
+                      "by sample. (Honest caveat: one sample per condition, so for the gene results later I use "
+                      "the uncorrected data to stay safe.)"))
     _figure_slide(prs, "Cell-type annotation", ["03_umap_lineage.png", "03_marker_dotplot.png"],
                   "celltypist lineages; agreement with Azimuth 92.7% and CoDi 93.1% (independent references).",
                   notes=(
-                      "Stage 3, annotation. LEFT: the same UMAP (UMAP1 vs UMAP2), now coloured by cell-type "
-                      "lineage -- T cells, B cells, NK cells, monocytes. RIGHT: a marker dot-plot -- rows are "
-                      "cell types, columns are known marker genes; dot colour is mean expression and dot size "
-                      "is the fraction of cells expressing it, so a big dark dot means that gene is a clean "
-                      "marker for that type. I used celltypist plus markers, then cross-checked against two "
-                      "independent references already in the data (Azimuth 92.7%, CoDi 93.1%)."))
+                      "What you're looking at: LEFT is the same cell-map, now coloured by what KIND of immune "
+                      "cell each dot is. You can literally see the neighbourhoods: T cells are the big purple "
+                      "mass on the right, monocytes the orange island top-left, B cells blue at the bottom, NK "
+                      "cells green. Clean separate islands = the cell types are real and distinct. RIGHT is a "
+                      "dot-plot that PROVES the labels: rows are cell clusters, columns are famous marker genes "
+                      "(e.g. CD3D for T cells, CD14 for monocytes). A big dark dot means 'this gene is strongly "
+                      "on in this cluster'. The dark dots line up on the diagonal, i.e. each cluster lights up "
+                      "its own known marker. What to say: I labelled with a tool called celltypist and it "
+                      "agreed with two other independent methods at about 93 percent."))
     _figure_slide(prs, "Composition shifts vs control", ["04_composition_stacked.png", "04_composition_grouped.png"],
                   "Cell-type proportions per sample; PSNP_200nm shows the largest compositional shift.",
                   notes=(
-                      "Stage 4, composition -- how the proportions of each cell type change across conditions. "
-                      "Y-axis on both is proportion of cells (fraction of the sample, 0 to 1). LEFT: stacked "
-                      "bars, one bar per sample, split into coloured cell-type bands. RIGHT: the same grouped "
-                      "by lineage so you can compare a type across samples side by side. The clear shift is "
-                      "monocytes under 200 nm -- roughly 2.5x more than control (log2 fold-change about +1.35) "
-                      "while other types barely move. No replicates, so these are descriptive proportions."))
+                      "What you're looking at: this asks 'did exposure change HOW MANY of each cell type there "
+                      "are?' The bars show what fraction of a sample is each cell type; the four coloured bars "
+                      "in each group are the four samples. What to say: T cells dominate every sample (the tall "
+                      "bars on the right, ~80 percent) -- that's normal for blood. The eye-catch is the "
+                      "Monocyte group: the 200 nm bar (green) is noticeably taller than the others, roughly "
+                      "two-and-a-half times the control's monocyte fraction, while everything else barely "
+                      "moves. So 200 nm exposure specifically bumps up monocytes. No replicates, so I call this "
+                      "a descriptive shift, not a p-value."))
     _figure_slide(prs, "Differential expression: dose-response", ["07_dose_response.png", "06_size_categories.png"],
                   "Monocytes respond most; 200 nm drives more unique genes than 40 nm; mixture-emergent in monocytes.",
                   notes=(
-                      "Stages 5 and 6 together. LEFT (dose-response): x-axis is particle size / condition, "
-                      "y-axis is the number of significant DE genes -- how many genes change on exposure. "
-                      "Monocytes stack highest (they eat and clear foreign particles) and 200 nm drives more "
-                      "than 40 nm: bigger particle, bigger response. RIGHT (size categories): grouped bars per "
-                      "lineage, y-axis = number of DE genes, split into four groups -- unique to 40 nm, unique "
-                      "to 200 nm, shared, and mixture-emergent (significant only in the mixture, neither single "
-                      "size). In monocytes about 180 genes are mixture-emergent: the combination does something "
-                      "the individual sizes do not."))
+                      "What you're looking at: two bar charts. Both use bar HEIGHT = number of genes that "
+                      "significantly changed (taller = bigger reaction). LEFT groups by condition (40 nm, 200 "
+                      "nm, mixture), coloured by cell type. The story jumps out: the orange Monocyte bars "
+                      "tower over everything -- monocytes are the cells that eat foreign junk, so they react "
+                      "hardest -- and 200 nm is taller than 40 nm, meaning bigger particles, bigger response. "
+                      "RIGHT zooms into WHERE those genes overlap. For each cell type, four bars: genes that "
+                      "react only to 40 nm (blue), only to 200 nm (orange), to both (green), and the key one, "
+                      "RED = genes that fire ONLY in the mixture and in neither size alone. What to say: look "
+                      "at Monocyte -- that red bar is about 180 genes, a whole response that only appears when "
+                      "both sizes are combined."))
     _bullets_slide(prs, "Key biological finding", [
         "Monocytes show the strongest transcriptional response to nanoplastic.",
         "200 nm particles drive MORE lineage-unique genes than 40 nm.",
@@ -259,32 +270,42 @@ def build():
     _figure_slide(prs, "Additional analyses: stress/inflammation module scores", ["07_module_scores.png"],
                   "Analysis 1 of 5. Per-sample mean module scores for stress and inflammation gene programs.",
                   notes=(
-                      "Analysis 1 of 5, module scoring. A heatmap: rows are samples (40 nm, 200 nm, mixture, "
-                      "control), columns are curated gene programs (stress, inflammation). Cell colour is the "
-                      "mean module score for that program in that sample -- darker/hotter means the program is "
-                      "more active. It shows the inflammation program lighting up under exposure, strongest "
-                      "where monocytes are most disrupted."))
+                      "Analysis 1 of 5. What you're looking at: a colour grid (heatmap). Each ROW is a sample, "
+                      "each COLUMN is a biological 'program' -- a named group of genes (oxidative stress, NF-kB "
+                      "inflammation, interferon, heat shock). Red = that program is turned UP in that sample, "
+                      "blue = turned down, white = neutral. What to say: the whole left column, oxidative "
+                      "stress, goes deep red in all three exposed samples but not the control -- so plastic "
+                      "reliably stresses the cells. And the NF-kB inflammation column turns pink specifically "
+                      "under 200 nm. So the size effect I keep pointing at shows up here too, in independent "
+                      "gene programs."))
     _figure_slide(prs, "Additional analyses: mixture additivity", ["07_mixture_additivity.png"],
                   "Analysis 2 of 5. Observed mixture response vs the 40+200 nm additive expectation, per lineage.",
                   notes=(
-                      "Analysis 2 of 5, mixture additivity -- the direct test of non-additivity. One small "
-                      "scatter per lineage. X-axis is the EXPECTED response if you simply add 40 nm and 200 nm "
-                      "effects; y-axis is the OBSERVED mixture response. The diagonal is 'mixture = sum of "
-                      "parts'. Points ABOVE the diagonal are super-additive (the mixture does more than the "
-                      "sum) -- that's what monocytes show. Points below are sub-additive, which is the "
-                      "lymphocytes. This is the quantitative backbone of the emergent-response claim."))
+                      "Analysis 2 of 5 -- the direct test of 'is the mixture just 40 plus 200?'. What you're "
+                      "looking at: one scatter per cell type. Each dot is a gene. Left-to-right is what I'd "
+                      "PREDICT if the mixture were simply the two sizes added together; bottom-to-top is what "
+                      "the mixture ACTUALLY did. The red diagonal line is 'prediction was perfect'. What to "
+                      "say: if everything sat on the line, the mixture would be boringly additive. But look at "
+                      "the Monocyte panel -- there are clear blobs of genes sitting OFF the line, especially "
+                      "the arms pointing up-and-left and the flat streaks near zero. Those are genes the "
+                      "mixture switched on (or off) that you'd never predict from the single sizes. That "
+                      "off-the-line behaviour IS the emergent, non-additive effect."))
     _figure_slide(prs, "Additional analyses: robustness & communication",
                   ["07_clustering_robustness.png", "07_ligand_receptor.png"],
                   "Analyses 3 & 4 of 5. Left: clustering robustness (ARI across Leiden resolutions). "
                   "Right: ligand-receptor communication shift on exposure. (Analysis 5, dose-response, is on the DE slide.)",
                   notes=(
-                      "Analyses 3 and 4. LEFT (robustness): x-axis is Leiden resolution (how finely you cut "
-                      "the clusters); left y-axis is the number of clusters, right y-axis (green, dashed) is "
-                      "the ARI -- adjusted Rand index, cluster agreement versus resolution 1.0, where 1.0 = "
-                      "identical. A flat-high ARI means the cell groupings are stable, not an artefact of one "
-                      "setting. RIGHT (ligand-receptor): x-axis is log2 fold-change versus control for "
-                      "signalling ligand-receptor pairs -- how cell-to-cell communication shifts on exposure. "
-                      "Analysis 5, dose-response, was already on the differential-expression slide."))
+                      "Analyses 3 and 4, two plots. LEFT is a sanity check on my clustering. Bottom axis = how "
+                      "finely I chose to cut the cells into groups ('resolution'). Blue line (rising) = you get "
+                      "more clusters if you cut finer -- obvious. The one that matters is the GREEN dashed "
+                      "line: how much the grouping still agrees with my default setting, where 1.0 = identical. "
+                      "It stays high near my chosen resolution of 1.0, so my cell groups aren't a fluke of one "
+                      "knob setting. RIGHT is cell-to-cell messaging. Each row is a signalling pair (a "
+                      "messenger and its receptor); bars go RIGHT if that message got louder after exposure, "
+                      "LEFT if quieter. What to say: the standout is IL1B-IL1R1, a classic inflammation alarm "
+                      "signal, shooting far right in all exposed samples and furthest under 200 nm -- so the "
+                      "cells aren't just changing internally, they're shouting inflammation at each other. "
+                      "(Analysis 5, dose-response, was the left chart on the earlier DE slide.)"))
     _bullets_slide(prs, "Limitations & reproducibility", [
         "One donor, one sample per condition -> NO biological replicates.",
         "DE is cell-level Wilcoxon (not pseudobulk); p-values exploratory, pseudoreplication caveat.",

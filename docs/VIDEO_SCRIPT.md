@@ -53,15 +53,18 @@ thresholds drawn over the actual data."
 
 ### 5. Integration  ·  ~45s  ·  [Slide 6: before and after UMAP]
 
-"The second stage is integration. Both panels are UMAP plots, which are a two-dimensional
-map where cells with similar gene expression land near each other. The axes, UMAP-1 and
-UMAP-2, have no units; only relative position matters. The colour is which sample a cell
-came from. On the left, before correction, the cells separate by sample, and that's a
-technical effect, not real biology. On the right, after Harmony correction, the colours
-mix together and the cells group by cell type instead. One honest caveat: because each
-condition is a single sample, the batch effect and the treatment effect are tied
-together, so for the actual gene-level results later I work on the uncorrected data,
-where this doesn't bias anything."
+"The second stage is integration. Both panels are UMAP plots. The way to picture a UMAP:
+each cell has thousands of genes, and UMAP squashes all of that down to a single dot on a
+two-dimensional map, so cells with similar gene activity land close together. The axes are
+just map coordinates with no units; only closeness means anything. Each dot is a cell,
+coloured by which sample it came from. What I want here is for the colours to be well
+mixed. If the cells clumped up by colour, it would mean the sample a cell came from
+matters more than its actual biology, which is a technical artefact I'd need to remove. On
+both panels the colours are already nicely blended, so the samples line up and the cells
+group by cell type rather than by batch. One honest caveat: because each condition is a
+single sample, the batch effect and the treatment effect are tied together, so for the
+actual gene-level results later I work on the uncorrected data, where this can't bias
+anything."
 
 ### 6. Annotation  ·  ~45s  ·  [Slide 7: lineage UMAP and dotplot]
 
@@ -119,21 +122,27 @@ mix of particle sizes, testing single sizes alone could underestimate the risk."
 ### 10. Additional analyses  ·  ~50s  ·  [Slide 12: list], [Slides 13-15: the five figures]
 
 "For the additional-insights part of the project I implemented five extra analyses,
-which this slide lists, and the next slides show each one. The first is module scoring,
-shown as a heatmap where the rows are samples, the columns are gene programs like stress
-and inflammation, and the colour is the mean score for that program in that sample; the
-inflammation program lights up under exposure. The second is a mixture-additivity test,
-one scatter per cell type where the x-axis is the response you'd expect if you simply
-added 40 and 200 nanometres, and the y-axis is the response actually observed in the
-mixture; the diagonal is 'mixture equals sum of parts', and the monocyte points sit
-above that line, meaning the mixture does more than the sum. The third is a clustering
-robustness check: the x-axis is the clustering resolution, and the green line is the
-agreement with the baseline clustering, which stays high, so the cell groups aren't an
-artefact of one setting. The fourth is a ligand-receptor analysis, where the x-axis is
-the log2 fold-change versus control for signalling pairs, showing how cell-to-cell
-communication shifts on exposure. And the fifth, dose-response, I
-already showed earlier on the differential-expression slide. All five point the same
-way: a size-dependent, non-additive response centred on monocytes."
+which this slide lists, and the next slides show each one. The first is module scoring.
+It's a colour grid: each row is a sample, each column is a named group of genes, like
+oxidative stress or NF-kB inflammation, and red means that program is turned up. The
+whole oxidative-stress column goes deep red in every exposed sample but not the control,
+and the inflammation column turns pink specifically under 200 nanometres, so the size
+effect shows up here too. The second is a mixture-additivity test, one scatter per cell
+type where each dot is a gene: left-to-right is what I'd predict if the mixture were just
+40 plus 200 added together, and bottom-to-top is what the mixture actually did. The red
+diagonal is 'my prediction was perfect'. In the monocyte panel you can see clear blobs of
+genes sitting off that line, genes the mixture switched on or off that you'd never predict
+from the single sizes, and that off-the-line behaviour is exactly the emergent effect. The
+third is a clustering robustness check: the bottom axis is how finely I cut the cells into
+groups, and the green line is how much the grouping still agrees with my default setting.
+It stays high near the setting I chose, so my cell groups aren't a fluke of one knob. The
+fourth is a ligand-receptor analysis: each row is a messenger-and-receptor signalling
+pair, and bars go right if that message got louder after exposure. The standout is the
+IL1B interleukin-one signal, a classic inflammation alarm, shooting far right in every
+exposed sample and furthest under 200 nanometres, so the cells are shouting inflammation
+at each other, not just changing internally. And the fifth, dose-response, I already
+showed earlier on the differential-expression slide. All five point the same way: a
+size-dependent, non-additive response centred on monocytes."
 
 ### 11. Limitations and close  ·  ~30s  ·  [Slide 16: limitations]
 
