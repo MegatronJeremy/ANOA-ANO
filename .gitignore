@@ -23,5 +23,8 @@ env/
 # run logs
 *.log
 
+# MS Office lock/temp files (e.g. ~$GI_nanoplastic.pptx while the deck is open)
+~$*
+
 # old notebook-based pipeline, kept locally as reference only (not a repo deliverable)
 legacy/
