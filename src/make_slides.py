@@ -163,10 +163,18 @@ def build():
     ])
     # Bonus split across two slides -- the additivity plot (5:1) is far too wide
     # to sit beside the module-scores heatmap on one slide.
-    _figure_slide(prs, "Bonus analyses (1/2): stress/inflammation module scores", ["07_module_scores.png"],
-                  "Per-sample mean module scores for stress and inflammation gene programs.")
-    _figure_slide(prs, "Bonus analyses (2/2): mixture additivity", ["07_mixture_additivity.png"],
-                  "Observed mixture response vs the 40+200 nm additive expectation, per lineage.")
+    _bullets_slide(prs, "Additional analyses (5 implemented)", [
+        "1. Module scoring - stress & inflammation gene programs per sample (shown next).",
+        "2. Mixture additivity - is the mixture = 40nm + 200nm? (shown next).",
+        "3. Clustering robustness - clusters stable across Leiden resolutions (ARI).",
+        "4. Ligand-receptor - shift in cell-to-cell communication on exposure.",
+        "5. Dose-response - disruption magnitude vs particle size.",
+        "All five reinforce the same story: size-dependent, non-additive, monocyte-centred.",
+    ])
+    _figure_slide(prs, "Additional analyses: stress/inflammation module scores", ["07_module_scores.png"],
+                  "Analysis 1 of 5. Per-sample mean module scores for stress and inflammation gene programs.")
+    _figure_slide(prs, "Additional analyses: mixture additivity", ["07_mixture_additivity.png"],
+                  "Analysis 2 of 5. Observed mixture response vs the 40+200 nm additive expectation, per lineage.")
     _bullets_slide(prs, "Limitations & reproducibility", [
         "One donor, one sample per condition -> NO biological replicates.",
         "DE is cell-level Wilcoxon (not pseudobulk); p-values exploratory, pseudoreplication caveat.",
