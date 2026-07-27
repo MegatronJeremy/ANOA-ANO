@@ -80,7 +80,11 @@ def save_upset(sets_by_size, lineage, suffix=""):
         import matplotlib.pyplot as plt
         from upsetplot import from_contents, UpSet
         data = from_contents(contents)
-        UpSet(data, subset_size="count", show_counts=True).plot()
+        # show_counts=False: upsetplot 0.9.0's count-label rendering raises a
+        # TypeError under matplotlib >=3.11 (only 0-dim arrays -> scalar). The
+        # intersection structure is still shown; exact counts live in
+        # 06_size_specific_summary.csv.
+        UpSet(data, subset_size="count", show_counts=False).plot()
         fig = plt.gcf()
         fig.suptitle(f"Size-specific DE genes -- {lineage}")
         fig.savefig(cfg.FIG_DIR / f"06_upset_{_safe(lineage)}{suffix}.png", dpi=110, bbox_inches="tight")
