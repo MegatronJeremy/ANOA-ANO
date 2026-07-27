@@ -22,6 +22,21 @@ param(
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
+# Corporate SSL-inspecting proxies re-sign HTTPS with an internal root CA that a
+# fresh venv's pip -- and tools that download over HTTPS, like celltypist's model
+# fetch -- don't trust, producing CERTIFICATE_VERIFY_FAILED. If a local CA bundle
+# has been exported (corp_ca_bundle.pem: machine-specific, git-ignored), point
+# pip and requests-based downloads at it. Set before the venv check so setup.ps1
+# inherits it too. No-op for anyone without the file (e.g. a grader on a normal
+# network) -- the default system cert handling is used unchanged.
+$caBundle = Join-Path $root "corp_ca_bundle.pem"
+if (Test-Path $caBundle) {
+    $env:PIP_CERT           = $caBundle
+    $env:REQUESTS_CA_BUNDLE = $caBundle
+    $env:SSL_CERT_FILE      = $caBundle
+    Write-Host "Using local corporate CA bundle for pip/requests SSL." -ForegroundColor DarkGray
+}
+
 # Prefer the venv interpreter. It must (a) exist and (b) actually have the
 # dependencies installed -- a half-built .venv (created but `pip install` never
 # finished) would otherwise fall through to a confusing ModuleNotFoundError at

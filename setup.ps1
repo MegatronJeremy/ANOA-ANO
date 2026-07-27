@@ -6,6 +6,20 @@ $root = $PSScriptRoot
 
 Write-Host "=== Setup: nanoplastic scRNA-seq pipeline ===" -ForegroundColor Cyan
 
+# Behind a corporate SSL-inspecting proxy, a fresh venv's pip rejects PyPI's
+# re-signed certificate (CERTIFICATE_VERIFY_FAILED). If a local CA bundle has
+# been exported (corp_ca_bundle.pem: machine-specific, git-ignored), point pip
+# and requests-based downloads at it so `pip install` below succeeds. run.ps1
+# sets this too; repeated here so a direct `.\setup.ps1` also works. No-op
+# without the file -- default system cert handling is used unchanged.
+$caBundle = Join-Path $root "corp_ca_bundle.pem"
+if (Test-Path $caBundle) {
+    $env:PIP_CERT           = $caBundle
+    $env:REQUESTS_CA_BUNDLE = $caBundle
+    $env:SSL_CERT_FILE      = $caBundle
+    Write-Host "Using local corporate CA bundle for pip/requests SSL." -ForegroundColor DarkGray
+}
+
 # --- 1. Find a Python 3.10+ interpreter -----------------------------------
 function Find-Python {
     foreach ($cmd in @("py -3.12", "py -3.11", "py -3.10", "py -3", "python")) {
