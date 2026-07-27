@@ -119,7 +119,13 @@ class PipelineTUI(App):
 
     def on_mount(self) -> None:
         table = self.query_one("#stages", DataTable)
-        table.add_columns("STAGE", "FUNCTION", "INPUT", "FULL", "SMOKE")
+        # Fixed widths so the status columns (the point of the grid) are never
+        # squeezed off-screen; FUNCTION is truncated rather than allowed to grow.
+        table.add_column("STAGE", width=30)
+        table.add_column("FUNCTION", width=40)
+        table.add_column("INPUT", width=16)
+        table.add_column("FULL", width=6)
+        table.add_column("SMOKE", width=7)
         self._populate()
         table.focus()
 
