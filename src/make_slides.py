@@ -41,15 +41,23 @@ def _stretch(ph):
     ph.height = height
 
 
-def _title_slide(prs, title, subtitle):
+def _notes(slide, text):
+    """Attach speaker notes (visible in PowerPoint's Presenter View, not on the
+    slide itself). Used to carry the narration + 'what you're seeing' per slide."""
+    if text:
+        slide.notes_slide.notes_text_frame.text = text.strip()
+
+
+def _title_slide(prs, title, subtitle, notes=""):
     s = prs.slides.add_slide(prs.slide_layouts[0])
     s.shapes.title.text = title
     s.placeholders[1].text = subtitle
     for ph in s.placeholders:
         _stretch(ph)
+    _notes(s, notes)
 
 
-def _bullets_slide(prs, title, bullets):
+def _bullets_slide(prs, title, bullets, notes=""):
     s = prs.slides.add_slide(prs.slide_layouts[1])
     s.shapes.title.text = title
     _stretch(s.shapes.title)
@@ -61,6 +69,7 @@ def _bullets_slide(prs, title, bullets):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.text = b
         p.font.size = Pt(18)
+    _notes(s, notes)
 
 
 def _place_fit(slide, path, box_left, box_top, box_w, box_h):
@@ -82,7 +91,7 @@ def _place_fit(slide, path, box_left, box_top, box_w, box_h):
                              width=Inches(w), height=Inches(h))
 
 
-def _figure_slide(prs, title, fig_names, caption=""):
+def _figure_slide(prs, title, fig_names, caption="", notes=""):
     """One slide, title + up to two figures side by side (skips any missing).
     Positions derive from SLIDE_W / MARGIN so the layout tracks the slide size."""
     paths = [FIG / f for f in fig_names if (FIG / f).exists()]
@@ -93,6 +102,7 @@ def _figure_slide(prs, title, fig_names, caption=""):
     if not paths:
         tb = s.shapes.add_textbox(Inches(MARGIN), Inches(2.5), Inches(usable_w), Inches(1)).text_frame
         tb.text = "(figure not generated yet -- run the pipeline)"
+        _notes(s, notes)
         return
     top, box_h = 1.5, 5.0            # vertical band for figures (below title, above caption)
     if len(paths) == 1:
@@ -106,6 +116,7 @@ def _figure_slide(prs, title, fig_names, caption=""):
         tb = s.shapes.add_textbox(Inches(MARGIN), Inches(6.9), Inches(usable_w), Inches(0.5)).text_frame
         tb.text = caption
         tb.paragraphs[0].font.size = Pt(12)
+    _notes(s, notes)
 
 
 def build():
@@ -115,13 +126,23 @@ def build():
 
     _title_slide(prs, "Single-Cell Immune Response to Nanoplastic Particles",
                  "scRNA-seq of human PBMCs exposed to 40 nm / 200 nm / mixed polystyrene "
-                 "nanoparticles vs control  -  Genomics Informatics, ETF")
+                 "nanoparticles vs control  -  Genomics Informatics, ETF",
+                 notes=(
+                     "Intro: I'm Vuk Djordjevic, master's student at the School of Electrical "
+                     "Engineering, Genome Informatics 2026. This is a single-cell RNA-seq study of "
+                     "how human immune cells respond to nanoplastic particles of different sizes. "
+                     "The core question: does particle size matter, and does a mixture of sizes do "
+                     "something neither size does alone?"))
     _bullets_slide(prs, "Question & dataset", [
         "Do small vs large nanoplastics provoke different immune responses?",
         "Does the 40+200 nm mixture do something neither size does alone?",
         "4 samples, one donor: PSNP_40nm, PSNP_200nm, PSNP_mixture, control",
         "~34,000 PBMCs, AnnData/.h5ad (Zenodo 10.5281/zenodo.15866724)",
-    ])
+    ], notes=(
+        "The data is 4 samples from one donor: peripheral blood immune cells exposed to 40 nm "
+        "particles, 200 nm particles, a 40+200 nm mixture, and an unexposed control. About "
+        "34,000 cells total. Be upfront: one donor, one sample per condition, so no biological "
+        "replicates -- that shaped the statistics and I flag it throughout."))
     _bullets_slide(prs, "Pipeline (6 stages, one reproducible driver)", [
         "1. QC & preprocessing  -  thresholds justified on real percentiles",
         "2. Integration  -  Harmony batch correction, UMAP, Leiden",
@@ -129,29 +150,82 @@ def build():
         "4. Composition  -  proportions + log2 fold-change vs control",
         "5. Differential expression  -  per-lineage Wilcoxon + pathway enrichment",
         "6. Size-specific effects  -  unique / shared / mixture-emergent genes",
-    ])
+    ], notes=(
+        "The analysis is one pipeline of six stages: QC, integration, annotation, composition, "
+        "differential expression, and size-specific effects. A single command reproduces all of "
+        "it from raw data, and each stage has automated tests."))
     # QC split across two slides -- the violin strip (3.75:1) and the scatter
     # are both too wide to share one slide without shrinking to unreadable.
     _figure_slide(prs, "QC & preprocessing (1/2): per-sample QC metrics", ["01_qc_violin_after.png"],
                   "Violins of the 3 QC metrics after filtering. Thresholds justified on the real distribution "
-                  "(max_genes ~p99, max_mito between p95-p99).")
+                  "(max_genes ~p99, max_mito between p95-p99).",
+                  notes=(
+                      "Stage 1, quality control -- remove low-quality cells before trusting anything. "
+                      "Three violin plots, one per QC metric: n_genes_by_counts (genes detected per cell), "
+                      "total_counts (total UMIs per cell), and pct_counts_mt (percent mitochondrial reads). "
+                      "The y-axis on each is the value of that metric; the width of the violin is how many "
+                      "cells sit at that value. Cutoffs were set from the real distribution, not guessed: the "
+                      "upper gene cutoff near the 99th percentile removes likely doublets (two cells read as "
+                      "one), the mito cutoff between p95 and p99 removes dying cells."))
     _figure_slide(prs, "QC & preprocessing (2/2): counts vs %mito", ["01_qc_scatter_counts_mito.png"],
-                  "total_counts vs %mito (pre-filter); threshold lines drawn. Drops likely doublets and dying cells.")
+                  "total_counts vs %mito (pre-filter); threshold lines drawn. Drops likely doublets and dying cells.",
+                  notes=(
+                      "Same QC stage, shown as a scatter. Each dot is one cell. X-axis is total_counts "
+                      "(total reads in the cell), y-axis is pct_counts_mt (percent mitochondrial). The "
+                      "threshold lines are drawn over the actual data -- cells that are high-mito or "
+                      "low-count fall outside them and get dropped. This is the same filtering as the "
+                      "violins, just showing the two metrics against each other."))
     _figure_slide(prs, "Integration removes the batch effect", ["02_umap_pre_harmony_by_sample.png", "02_umap_by_sample.png"],
-                  "Before (left) vs after Harmony (right), coloured by sample: samples mix after correction.")
+                  "Before (left) vs after Harmony (right), coloured by sample: samples mix after correction.",
+                  notes=(
+                      "Stage 2, integration. Both panels are UMAP plots -- a 2D map where nearby cells have "
+                      "similar expression; axes are UMAP1 and UMAP2 and have no units, only relative position "
+                      "matters. Colour = which sample a cell came from. LEFT (before correction): cells "
+                      "separate by sample -- a technical batch effect, not biology. RIGHT (after Harmony): the "
+                      "colours mix together and cells group by cell type instead. Caveat: because each "
+                      "condition is a single sample, batch and treatment are confounded, so the gene-level "
+                      "results later use the uncorrected data where this doesn't bias anything."))
     _figure_slide(prs, "Cell-type annotation", ["03_umap_lineage.png", "03_marker_dotplot.png"],
-                  "celltypist lineages; agreement with Azimuth 92.7% and CoDi 93.1% (independent references).")
+                  "celltypist lineages; agreement with Azimuth 92.7% and CoDi 93.1% (independent references).",
+                  notes=(
+                      "Stage 3, annotation. LEFT: the same UMAP (UMAP1 vs UMAP2), now coloured by cell-type "
+                      "lineage -- T cells, B cells, NK cells, monocytes. RIGHT: a marker dot-plot -- rows are "
+                      "cell types, columns are known marker genes; dot colour is mean expression and dot size "
+                      "is the fraction of cells expressing it, so a big dark dot means that gene is a clean "
+                      "marker for that type. I used celltypist plus markers, then cross-checked against two "
+                      "independent references already in the data (Azimuth 92.7%, CoDi 93.1%)."))
     _figure_slide(prs, "Composition shifts vs control", ["04_composition_stacked.png", "04_composition_grouped.png"],
-                  "Cell-type proportions per sample; PSNP_200nm shows the largest compositional shift.")
+                  "Cell-type proportions per sample; PSNP_200nm shows the largest compositional shift.",
+                  notes=(
+                      "Stage 4, composition -- how the proportions of each cell type change across conditions. "
+                      "Y-axis on both is proportion of cells (fraction of the sample, 0 to 1). LEFT: stacked "
+                      "bars, one bar per sample, split into coloured cell-type bands. RIGHT: the same grouped "
+                      "by lineage so you can compare a type across samples side by side. The clear shift is "
+                      "monocytes under 200 nm -- roughly 2.5x more than control (log2 fold-change about +1.35) "
+                      "while other types barely move. No replicates, so these are descriptive proportions."))
     _figure_slide(prs, "Differential expression: dose-response", ["07_dose_response.png", "06_size_categories.png"],
-                  "Monocytes respond most; 200 nm drives more unique genes than 40 nm; mixture-emergent in monocytes.")
+                  "Monocytes respond most; 200 nm drives more unique genes than 40 nm; mixture-emergent in monocytes.",
+                  notes=(
+                      "Stages 5 and 6 together. LEFT (dose-response): x-axis is particle size / condition, "
+                      "y-axis is the number of significant DE genes -- how many genes change on exposure. "
+                      "Monocytes stack highest (they eat and clear foreign particles) and 200 nm drives more "
+                      "than 40 nm: bigger particle, bigger response. RIGHT (size categories): grouped bars per "
+                      "lineage, y-axis = number of DE genes, split into four groups -- unique to 40 nm, unique "
+                      "to 200 nm, shared, and mixture-emergent (significant only in the mixture, neither single "
+                      "size). In monocytes about 180 genes are mixture-emergent: the combination does something "
+                      "the individual sizes do not."))
     _bullets_slide(prs, "Key biological finding", [
         "Monocytes show the strongest transcriptional response to nanoplastic.",
         "200 nm particles drive MORE lineage-unique genes than 40 nm.",
         "The 40+200 nm mixture produces an EMERGENT monocyte response -",
         "  genes significant only in the mixture, in neither single size.",
         "In lymphocytes the mixture is weaker than either size (sub-additive).",
-    ])
+    ], notes=(
+        "This is the headline. Three points: monocytes respond strongest; 200 nm drives more "
+        "lineage-unique genes than 40 nm; and the 40+200 nm mixture produces an emergent "
+        "monocyte response -- about 180 genes significant only in the mixture, in neither single "
+        "size. In lymphocytes the opposite happens: the mixture is weaker than either size alone. "
+        "So the combination of sizes does something the individual sizes do not."))
     _bullets_slide(prs, "What the mixture does: emergent inflammation", [
         "The 180 mixture-only monocyte genes are dominated by INFLAMMATION.",
         "Pathway enrichment (p ~ 1e-21): interleukin, cytokine & TNF signalling,",
@@ -160,7 +234,14 @@ def build():
         "Interpretation: two sub-threshold exposures together push monocytes over",
         "  an inflammatory activation threshold - an emergent, non-additive effect.",
         "Real exposure is always to mixtures -> single-size studies may under-estimate risk.",
-    ])
+    ], notes=(
+        "What is that new thing? I ran pathway enrichment on the 180 mixture-only monocyte genes "
+        "and it points clearly at inflammation. Top pathways, adjusted p about 1e-21: interleukin, "
+        "cytokine and TNF signalling, plus 'response to lipopolysaccharide' -- the program a "
+        "monocyte runs during a bacterial infection, here set off by plastic. Strongest genes up "
+        "are RIPK2 and TRAF1, core innate-immune and TNF genes. Reading: 40 and 200 nm each cause "
+        "sub-threshold changes, but together they push monocytes over an inflammatory threshold. "
+        "Real exposure is always to mixtures, so single-size testing may under-estimate the risk."))
     # Bonus split across two slides -- the additivity plot (5:1) is far too wide
     # to sit beside the module-scores heatmap on one slide.
     _bullets_slide(prs, "Additional analyses (5 implemented)", [
@@ -170,17 +251,50 @@ def build():
         "4. Ligand-receptor - shift in cell-to-cell communication on exposure.",
         "5. Dose-response - disruption magnitude vs particle size.",
         "All five reinforce the same story: size-dependent, non-additive, monocyte-centred.",
-    ])
+    ], notes=(
+        "For the additional-insights part I implemented five extra analyses; this slide lists them "
+        "and the next slides show each. Module scoring, mixture additivity, clustering robustness, "
+        "ligand-receptor communication, and dose-response. All five point the same way: a "
+        "size-dependent, non-additive response centred on monocytes."))
     _figure_slide(prs, "Additional analyses: stress/inflammation module scores", ["07_module_scores.png"],
-                  "Analysis 1 of 5. Per-sample mean module scores for stress and inflammation gene programs.")
+                  "Analysis 1 of 5. Per-sample mean module scores for stress and inflammation gene programs.",
+                  notes=(
+                      "Analysis 1 of 5, module scoring. A heatmap: rows are samples (40 nm, 200 nm, mixture, "
+                      "control), columns are curated gene programs (stress, inflammation). Cell colour is the "
+                      "mean module score for that program in that sample -- darker/hotter means the program is "
+                      "more active. It shows the inflammation program lighting up under exposure, strongest "
+                      "where monocytes are most disrupted."))
     _figure_slide(prs, "Additional analyses: mixture additivity", ["07_mixture_additivity.png"],
-                  "Analysis 2 of 5. Observed mixture response vs the 40+200 nm additive expectation, per lineage.")
+                  "Analysis 2 of 5. Observed mixture response vs the 40+200 nm additive expectation, per lineage.",
+                  notes=(
+                      "Analysis 2 of 5, mixture additivity -- the direct test of non-additivity. One small "
+                      "scatter per lineage. X-axis is the EXPECTED response if you simply add 40 nm and 200 nm "
+                      "effects; y-axis is the OBSERVED mixture response. The diagonal is 'mixture = sum of "
+                      "parts'. Points ABOVE the diagonal are super-additive (the mixture does more than the "
+                      "sum) -- that's what monocytes show. Points below are sub-additive, which is the "
+                      "lymphocytes. This is the quantitative backbone of the emergent-response claim."))
+    _figure_slide(prs, "Additional analyses: robustness & communication",
+                  ["07_clustering_robustness.png", "07_ligand_receptor.png"],
+                  "Analyses 3 & 4 of 5. Left: clustering robustness (ARI across Leiden resolutions). "
+                  "Right: ligand-receptor communication shift on exposure. (Analysis 5, dose-response, is on the DE slide.)",
+                  notes=(
+                      "Analyses 3 and 4. LEFT (robustness): x-axis is Leiden resolution (how finely you cut "
+                      "the clusters); left y-axis is the number of clusters, right y-axis (green, dashed) is "
+                      "the ARI -- adjusted Rand index, cluster agreement versus resolution 1.0, where 1.0 = "
+                      "identical. A flat-high ARI means the cell groupings are stable, not an artefact of one "
+                      "setting. RIGHT (ligand-receptor): x-axis is log2 fold-change versus control for "
+                      "signalling ligand-receptor pairs -- how cell-to-cell communication shifts on exposure. "
+                      "Analysis 5, dose-response, was already on the differential-expression slide."))
     _bullets_slide(prs, "Limitations & reproducibility", [
         "One donor, one sample per condition -> NO biological replicates.",
         "DE is cell-level Wilcoxon (not pseudobulk); p-values exploratory, pseudoreplication caveat.",
         "No external gene-level ground truth; DE validated internally + biologically.",
         "Everything reproduces: `python run_pipeline.py --all`; 37 offline intent tests.",
-    ])
+    ], notes=(
+        "The limits, stated plainly: one donor and no replicates mean the differential expression "
+        "is per-cell and exploratory, with a pseudoreplication caveat. No external gene-level "
+        "reference, so I validated internally and biologically. Everything reproduces from the "
+        "repository with a single command and a 37-test suite. Thanks for watching."))
 
     out = SLIDES_DIR / "GI_nanoplastic.pptx"
     prs.save(out)
