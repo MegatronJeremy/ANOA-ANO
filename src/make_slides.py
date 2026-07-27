@@ -27,16 +27,30 @@ MARGIN = 0.4   # left/right page margin (inches)
 FIG = cfg.RESULTS_DIR / "full" / "figures"
 
 
+def _stretch(ph):
+    """python-pptx's built-in layouts size placeholders for a 4:3 slide (~9in
+    wide). On our 16:9 slide that leaves them hugging the left with a dead band
+    on the right, which reads as 'not centred'. Re-span each placeholder across
+    the usable width so titles/bullets fill the slide."""
+    ph.left = Inches(MARGIN)
+    ph.width = Inches(SLIDE_W - 2 * MARGIN)
+
+
 def _title_slide(prs, title, subtitle):
     s = prs.slides.add_slide(prs.slide_layouts[0])
     s.shapes.title.text = title
     s.placeholders[1].text = subtitle
+    for ph in s.placeholders:
+        _stretch(ph)
 
 
 def _bullets_slide(prs, title, bullets):
     s = prs.slides.add_slide(prs.slide_layouts[1])
     s.shapes.title.text = title
-    tf = s.placeholders[1].text_frame
+    _stretch(s.shapes.title)
+    body = s.placeholders[1]
+    _stretch(body)
+    tf = body.text_frame
     tf.clear()
     for i, b in enumerate(bullets):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
@@ -69,6 +83,7 @@ def _figure_slide(prs, title, fig_names, caption=""):
     paths = [FIG / f for f in fig_names if (FIG / f).exists()]
     s = prs.slides.add_slide(prs.slide_layouts[5])
     s.shapes.title.text = title
+    _stretch(s.shapes.title)
     usable_w = SLIDE_W - 2 * MARGIN
     if not paths:
         tb = s.shapes.add_textbox(Inches(MARGIN), Inches(2.5), Inches(usable_w), Inches(1)).text_frame
@@ -110,8 +125,13 @@ def build():
         "5. Differential expression  -  per-lineage Wilcoxon + pathway enrichment",
         "6. Size-specific effects  -  unique / shared / mixture-emergent genes",
     ])
-    _figure_slide(prs, "QC & preprocessing", ["01_qc_violin_after.png", "01_qc_scatter_counts_mito.png"],
-                  "Thresholds: max_genes~p99, max_mito between p95-p99; justified on the real distribution.")
+    # QC split across two slides -- the violin strip (3.75:1) and the scatter
+    # are both too wide to share one slide without shrinking to unreadable.
+    _figure_slide(prs, "QC & preprocessing (1/2): per-sample QC metrics", ["01_qc_violin_after.png"],
+                  "Violins of the 3 QC metrics after filtering. Thresholds justified on the real distribution "
+                  "(max_genes ~p99, max_mito between p95-p99).")
+    _figure_slide(prs, "QC & preprocessing (2/2): counts vs %mito", ["01_qc_scatter_counts_mito.png"],
+                  "total_counts vs %mito (pre-filter); threshold lines drawn. Drops likely doublets and dying cells.")
     _figure_slide(prs, "Integration removes the batch effect", ["02_umap_pre_harmony_by_sample.png", "02_umap_by_sample.png"],
                   "Before (left) vs after Harmony (right), coloured by sample: samples mix after correction.")
     _figure_slide(prs, "Cell-type annotation", ["03_umap_lineage.png", "03_marker_dotplot.png"],
@@ -127,8 +147,12 @@ def build():
         "  genes significant only in the mixture, in neither single size.",
         "In lymphocytes the mixture is weaker than either size (sub-additive).",
     ])
-    _figure_slide(prs, "Bonus analyses", ["07_module_scores.png", "07_mixture_additivity.png"],
-                  "Stress/inflammation module scores; mixture additivity (observed vs 40+200 expectation).")
+    # Bonus split across two slides -- the additivity plot (5:1) is far too wide
+    # to sit beside the module-scores heatmap on one slide.
+    _figure_slide(prs, "Bonus analyses (1/2): stress/inflammation module scores", ["07_module_scores.png"],
+                  "Per-sample mean module scores for stress and inflammation gene programs.")
+    _figure_slide(prs, "Bonus analyses (2/2): mixture additivity", ["07_mixture_additivity.png"],
+                  "Observed mixture response vs the 40+200 nm additive expectation, per lineage.")
     _bullets_slide(prs, "Limitations & reproducibility", [
         "One donor, one sample per condition -> NO biological replicates.",
         "DE is cell-level Wilcoxon (not pseudobulk); p-values exploratory, pseudoreplication caveat.",
