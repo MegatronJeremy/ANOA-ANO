@@ -31,7 +31,11 @@ $py = Join-Path $root ".venv\Scripts\python.exe"
 
 function Test-VenvReady {
     if (-not (Test-Path $py)) { return $false }
-    & $py -c "import numpy" 2>$null
+    # Probe for a core dependency. Local SilentlyContinue so the broken venv's
+    # traceback on stderr doesn't get escalated into a terminating error by the
+    # script-level $ErrorActionPreference = "Stop"; we judge purely by exit code.
+    $ErrorActionPreference = "SilentlyContinue"
+    & $py -c "import numpy" *> $null
     return ($LASTEXITCODE -eq 0)
 }
 
